@@ -8,6 +8,7 @@ This page contains tutorials for interacting with Gemini CLI.
 > Before using a third-party MCP server, ensure you trust its source and understand the tools it provides. Your use of third-party servers is at your own risk.
 
 This tutorial demonstrates how to set up a MCP server, using the [GitHub MCP server](https://github.com/github/github-mcp-server) as an example. The GitHub MCP server provides tools for interacting with GitHub repositories, such as creating issues and commenting on pull requests.
+If your MCP server runs on a different machine, see [Running a remote MCP server](remote-mcp-server.md) for connection instructions.
 
 ### Prerequisites
 
