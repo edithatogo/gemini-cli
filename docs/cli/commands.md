@@ -2,6 +2,8 @@
 
 Gemini CLI supports several built-in commands to help you manage your session, customize the interface, and control its behavior. These commands are prefixed with a forward slash (`/`), an at symbol (`@`), or an exclamation mark (`!`).
 
+**Keyboard shortcuts:** Press **Ctrl+Enter** to submit your prompt. To insert a newline while typing, use **Shift+Enter**. Multiline input is only possible when you insert newlines with **Shift+Enter**.
+
 ## Slash commands (`/`)
 
 Slash commands provide meta-level control over the CLI itself.
