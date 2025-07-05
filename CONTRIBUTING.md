@@ -61,11 +61,15 @@ If you'd like to get early feedback on your work, please use GitHub's **Draft Pu
 
 Before submitting your PR, ensure that all automated checks are passing by running `npm run preflight`. This command runs all tests, linting, and other style checks.
 
-#### 5. Update Documentation
+#### 5. Pin Workflow Actions
+
+All GitHub Actions in `.github/workflows/` must be pinned to a commit SHA. After updating any Action reference, run `act --list` (or another dry run) to verify the workflow syntax.
+
+#### 6. Update Documentation
 
 If your PR introduces a user-facing change (e.g., a new command, a modified flag, or a change in behavior), you must also update the relevant documentation in the `/docs` directory.
 
-#### 6. Write Clear Commit Messages and a Good PR Description
+#### 7. Write Clear Commit Messages and a Good PR Description
 
 Your PR should have a clear, descriptive title and a detailed description of the changes. Follow the [Conventional Commits](https://www.conventionalcommits.org/) standard for your commit messages.
 
