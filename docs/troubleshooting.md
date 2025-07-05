@@ -37,6 +37,7 @@ This guide provides solutions to common issues and debugging tips.
     1.  Ensure Gemini CLI installation was successful.
     2.  If installed globally, check that your npm global binary directory is in your PATH.
     3.  If running from source, ensure you are using the correct command to invoke it (e.g., `node packages/cli/dist/index.js ...`).
+    4.  On WSL, `npx` stores executables in a cache directory that might not be in your `$PATH`. After running the `npx` command, add the `bin` folder inside `$(npm config get cache)/_npx/<hash>` to your `PATH`.
 
 - **Error: `MODULE_NOT_FOUND` or import errors.**
   - **Cause:** Dependencies are not installed correctly, or the project hasn't been built.
@@ -52,6 +53,10 @@ This guide provides solutions to common issues and debugging tips.
   - **Issue:** The CLI does not enter interactive mode (no prompt appears) if an environment variable starting with `CI_` (e.g., `CI_TOKEN`) is set. This is because the `is-in-ci` package, used by the underlying UI framework, detects these variables and assumes a non-interactive CI environment.
   - **Cause:** The `is-in-ci` package checks for the presence of `CI`, `CONTINUOUS_INTEGRATION`, or any environment variable with a `CI_` prefix. When any of these are found, it signals that the environment is non-interactive, which prevents the CLI from starting in its interactive mode.
   - **Solution:** If the `CI_` prefixed variable is not needed for the CLI to function, you can temporarily unset it for the command. e.g., `env -u CI_TOKEN gemini`
+
+### PATH issues on WSL
+
+WSL often stores npm binaries on the Windows file system, which may not be part of your Linux `$PATH`. Use `npm config get cache` to locate the cache directory and add the relevant `_npx/<hash>/bin` folder to your `PATH` if commands like `gemini` are not found.
 
 ## Debugging Tips
 

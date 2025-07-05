@@ -26,6 +26,20 @@ With the Gemini CLI you can:
    npx https://github.com/google-gemini/gemini-cli
    ```
 
+   **WSL users:** `npx` caches the binary in your npm cache directory, which is
+   often located on the Windows file system and not included in `$PATH`. After
+   running the command above, add the cached `bin` folder to your `PATH` so you
+   can invoke `gemini` directly:
+
+   ```bash
+   echo 'export PATH="$PATH:$(npm config get cache)/_npx/<hash>/bin"' >> ~/.bashrc
+   source ~/.bashrc
+   ```
+
+   Replace `<hash>` with the folder name created inside `_npx` during the
+   initial run, or consider using the global npm installation for a persistent
+   path.
+
    Or install it with:
 
    ```bash
