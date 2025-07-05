@@ -40,7 +40,7 @@ describe('formatters', () => {
     });
 
     it('should format an exact number of minutes', () => {
-      expect(formatDuration(120000)).toBe('2m');
+      expect(formatDuration(120000)).toBe('2m 0s');
     });
 
     it('should format a duration in minutes and seconds', () => {
