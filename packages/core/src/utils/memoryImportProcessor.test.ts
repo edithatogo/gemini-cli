@@ -14,7 +14,7 @@ vi.mock('fs/promises');
 const mockedFs = vi.mocked(fs);
 
 // Mock console methods to capture warnings
-const originalConsoleWarn = console.warn;
+const originalConsoleLog = console.log;
 const originalConsoleError = console.error;
 const originalConsoleDebug = console.debug;
 
@@ -22,14 +22,14 @@ describe('memoryImportProcessor', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock console methods
-    console.warn = vi.fn();
+    console.log = vi.fn();
     console.error = vi.fn();
     console.debug = vi.fn();
   });
 
   afterEach(() => {
     // Restore console methods
-    console.warn = originalConsoleWarn;
+    console.log = originalConsoleLog;
     console.error = originalConsoleError;
     console.debug = originalConsoleDebug;
   });
@@ -60,7 +60,7 @@ describe('memoryImportProcessor', () => {
 
       const result = await processImports(content, basePath, true);
 
-      expect(console.warn).toHaveBeenCalledWith(
+      expect(console.log).toHaveBeenCalledWith(
         '[WARN] [ImportProcessor]',
         'Import processor only supports .md files. Attempting to import non-md file: ./instructions.txt. This will fail.',
       );
@@ -125,7 +125,7 @@ describe('memoryImportProcessor', () => {
 
       const result = await processImports(content, basePath, true, importState);
 
-      expect(console.warn).toHaveBeenCalledWith(
+      expect(console.log).toHaveBeenCalledWith(
         '[WARN] [ImportProcessor]',
         'Maximum import depth (1) reached. Stopping import processing.',
       );
