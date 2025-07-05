@@ -65,6 +65,11 @@ export interface ReadManyFilesParams {
    * Optional. Whether to respect .gitignore patterns. Defaults to true.
    */
   respect_git_ignore?: boolean;
+
+  /**
+   * Optional. Include files that match .gitignore patterns. Defaults to false.
+   */
+  include_ignored?: boolean;
 }
 
 /**
@@ -176,6 +181,12 @@ export class ReadManyFilesTool extends BaseTool<
             'Optional. Whether to respect .gitignore patterns when discovering files. Only available in git repositories. Defaults to true.',
           default: true,
         },
+        include_ignored: {
+          type: 'boolean',
+          description:
+            'Optional. Include files that match .gitignore patterns. Defaults to false.',
+          default: false,
+        },
       },
       required: ['paths'],
     };
@@ -244,6 +255,12 @@ Use this tool when the user's query implies needing the content of several files
     ) {
       return 'If provided, "exclude" must be an array of strings/glob patterns.';
     }
+    if (
+      params.include_ignored !== undefined &&
+      typeof params.include_ignored !== 'boolean'
+    ) {
+      return 'If provided, "include_ignored" must be a boolean.';
+    }
     return null;
   }
 
@@ -293,10 +310,13 @@ Use this tool when the user's query implies needing the content of several files
       exclude = [],
       useDefaultExcludes = true,
       respect_git_ignore = true,
+      include_ignored = false,
     } = params;
 
     const respectGitIgnore =
       respect_git_ignore ?? this.config.getFileFilteringRespectGitIgnore();
+    const includeIgnored =
+      include_ignored ?? this.config.getFileFilteringIncludeIgnored();
 
     // Get centralized file discovery service
     const fileDiscovery = this.config.getFileService();
@@ -336,6 +356,7 @@ Use this tool when the user's query implies needing the content of several files
               entries.map((p) => path.relative(toolBaseDir, p)),
               {
                 respectGitIgnore,
+                includeIgnored,
               },
             )
             .map((p) => path.resolve(toolBaseDir, p))

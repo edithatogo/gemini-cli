@@ -137,6 +137,7 @@ export async function handleAtCommand({
   // Get centralized file discovery service
   const fileDiscovery = config.getFileService();
   const respectGitIgnore = config.getFileFilteringRespectGitIgnore();
+  const includeIgnored = config.getFileFilteringIncludeIgnored();
 
   const pathSpecsToRead: string[] = [];
   const atPathToResolvedSpecMap = new Map<string, string>();
@@ -182,7 +183,7 @@ export async function handleAtCommand({
     }
 
     // Check if path should be ignored by git
-    if (fileDiscovery.shouldGitIgnoreFile(pathName)) {
+    if (fileDiscovery.shouldGitIgnoreFile(pathName, includeIgnored)) {
       const reason = respectGitIgnore
         ? 'git-ignored and will be skipped'
         : 'ignored by custom patterns';
@@ -350,6 +351,7 @@ export async function handleAtCommand({
   const toolArgs = {
     paths: pathSpecsToRead,
     respectGitIgnore, // Use configuration setting
+    includeIgnored,
   };
   let toolCallDisplay: IndividualToolCallDisplay;
 
