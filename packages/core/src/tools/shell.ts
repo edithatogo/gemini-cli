@@ -108,16 +108,13 @@ Process Group PGID: Process group started or \`(none)\``,
   }
 
   /**
-   * Determines whether a given shell command is allowed to execute based on
-   * the tool's configuration including allowlists and blocklists.
-   *
-   * @param command The shell command string to validate
-   * @returns True if the command is allowed to execute, false otherwise
+   * Determines the rejection reason for a given shell command based on the
+   * tool's configuration. If the command is allowed, `null` is returned.
    */
-  isCommandAllowed(command: string): boolean {
+  private getCommandRejectionReason(command: string): string | null {
     // 0. Disallow command substitution
     if (command.includes('$(') || command.includes('`')) {
-      return false;
+      return 'command substitution not permitted';
     }
 
     const SHELL_TOOL_NAMES = [ShellTool.name, ShellTool.Name];
@@ -157,7 +154,7 @@ Process Group PGID: Process group started or \`(none)\``,
 
     // 1. Check if the shell tool is globally disabled.
     if (SHELL_TOOL_NAMES.some((name) => excludeTools.includes(name))) {
-      return false;
+      return 'command not on allowlist';
     }
 
     const blockedCommands = new Set(extractCommands(excludeTools));
@@ -176,7 +173,7 @@ Process Group PGID: Process group started or \`(none)\``,
         isPrefixedBy(cmd, blocked),
       );
       if (isBlocked) {
-        return false;
+        return 'command blocked by configuration';
       }
 
       // 3. If in strict allow-list mode, check if the command is permitted.
@@ -187,18 +184,30 @@ Process Group PGID: Process group started or \`(none)\``,
           isPrefixedBy(cmd, allowed),
         );
         if (!isAllowed) {
-          return false;
+          return 'command not on allowlist';
         }
       }
     }
 
     // 4. If all checks pass, the command is allowed.
-    return true;
+    return null;
+  }
+
+  /**
+   * Determines whether a given shell command is allowed to execute based on
+   * the tool's configuration including allowlists and blocklists.
+   *
+   * @param command The shell command string to validate
+   * @returns True if the command is allowed to execute, false otherwise
+   */
+  isCommandAllowed(command: string): boolean {
+    return this.getCommandRejectionReason(command) === null;
   }
 
   validateToolParams(params: ShellToolParams): string | null {
-    if (!this.isCommandAllowed(params.command)) {
-      return `Command is not allowed: ${params.command}`;
+    const disallowReason = this.getCommandRejectionReason(params.command);
+    if (disallowReason) {
+      return `Command is not allowed: ${params.command} (${disallowReason})`;
     }
     if (
       !SchemaValidator.validate(
