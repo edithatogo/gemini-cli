@@ -421,6 +421,58 @@ describe('useSlashCommandProcessor', () => {
       );
     });
 
+    it('should read gcp project from GOOGLE_CLOUD_PROJECT_ID when GOOGLE_CLOUD_PROJECT is not set', async () => {
+      // Arrange
+      mockGetCliVersionFn.mockResolvedValue('test-version');
+      process.env.SANDBOX = 'gemini-sandbox';
+      delete process.env.GOOGLE_CLOUD_PROJECT;
+      process.env.GOOGLE_CLOUD_PROJECT_ID = 'fallback-project';
+      vi.mocked(mockConfig.getModel).mockReturnValue('test-model-from-config');
+
+      const settings = {
+        merged: {
+          selectedAuthType: 'test-auth-type',
+          contextFileName: 'GEMINI.md',
+        },
+      } as LoadedSettings;
+
+      const { result } = renderHook(() =>
+        useSlashCommandProcessor(
+          mockConfig,
+          settings,
+          [],
+          mockAddItem,
+          mockClearItems,
+          mockLoadHistory,
+          mockRefreshStatic,
+          mockSetShowHelp,
+          mockOnDebugMessage,
+          mockOpenThemeDialog,
+          mockOpenAuthDialog,
+          mockOpenEditorDialog,
+          mockPerformMemoryRefresh,
+          mockCorgiMode,
+          false,
+          mockSetQuittingMessages,
+        ),
+      );
+
+      // Act
+      await act(async () => {
+        await result.current.handleSlashCommand('/about');
+      });
+
+      // Assert
+      expect(mockAddItem).toHaveBeenCalledTimes(2); // user message + about message
+      expect(mockAddItem).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          gcpProject: 'fallback-project',
+        }),
+        expect.any(Number),
+      );
+    });
+
     it('should show sandbox-exec profile when applicable', async () => {
       // Arrange
       mockGetCliVersionFn.mockResolvedValue('test-version');

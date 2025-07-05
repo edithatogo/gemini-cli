@@ -526,11 +526,10 @@ export async function start_sandbox(
   }
 
   // copy GOOGLE_CLOUD_PROJECT
-  if (process.env.GOOGLE_CLOUD_PROJECT) {
-    args.push(
-      '--env',
-      `GOOGLE_CLOUD_PROJECT=${process.env.GOOGLE_CLOUD_PROJECT}`,
-    );
+  const gcpProject =
+    process.env.GOOGLE_CLOUD_PROJECT || process.env.GOOGLE_CLOUD_PROJECT_ID;
+  if (gcpProject) {
+    args.push('--env', `GOOGLE_CLOUD_PROJECT=${gcpProject}`);
   }
 
   // copy GOOGLE_CLOUD_LOCATION

@@ -249,6 +249,9 @@ The CLI automatically loads environment variables from an `.env` file. The loadi
   - Required for using Code Assist or Vertex AI.
   - If using Vertex AI, ensure you have the necessary permissions and set the `GOOGLE_GENAI_USE_VERTEXAI=true` environment variable.
   - Example: `export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"`.
+  - If this variable is not defined, the CLI will also read `GOOGLE_CLOUD_PROJECT_ID`.
+- **`GOOGLE_CLOUD_PROJECT_ID`**:
+  - Alternate variable for specifying your Google Cloud Project ID. Used when `GOOGLE_CLOUD_PROJECT` is undefined.
 - **`GOOGLE_APPLICATION_CREDENTIALS`** (string):
   - **Description:** The path to your Google Application Credentials JSON file.
   - **Example:** `export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/credentials.json"`
