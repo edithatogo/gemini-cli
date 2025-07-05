@@ -15,6 +15,7 @@ import { DefaultLight } from './default-light.js';
 import { DefaultDark } from './default.js';
 import { ShadesOfPurple } from './shades-of-purple.js';
 import { XCode } from './xcode.js';
+import { Mononoke } from './mononoke.js';
 import { Theme, ThemeType } from './theme.js';
 import { ANSI } from './ansi.js';
 import { ANSILight } from './ansi-light.js';
@@ -41,6 +42,7 @@ class ThemeManager {
       DefaultLight,
       DefaultDark,
       GitHubDark,
+      Mononoke,
       GitHubLight,
       GoogleCode,
       ShadesOfPurple,
