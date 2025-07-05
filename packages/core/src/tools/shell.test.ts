@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { expect, describe, it } from 'vitest';
+import { expect, describe, it, vi, beforeEach } from 'vitest';
 import { ShellTool } from './shell.js';
 import { Config } from '../config/config.js';
 
@@ -334,5 +334,41 @@ describe('ShellTool', () => {
     const shellTool = new ShellTool(config);
     const isAllowed = shellTool.isCommandAllowed('gh issue list || rm -rf /');
     expect(isAllowed).toBe(false);
+  });
+
+  describe('sudo password cache', () => {
+    beforeEach(() => {
+      (ShellTool as any).sudoCache = null;
+    });
+
+    it('prompts for password when cache is empty', async () => {
+      const config = {
+        getCoreTools: () => undefined,
+        getExcludeTools: () => undefined,
+      } as Config;
+      const shellTool = new ShellTool(config);
+      const promptSpy = vi
+        .spyOn(shellTool as any, 'promptForPassword')
+        .mockResolvedValue('pw');
+      const password = await (shellTool as any).getSudoPassword();
+      expect(password).toBe('pw');
+      expect(promptSpy).toHaveBeenCalled();
+    });
+
+    it('reuses cached password without prompting', async () => {
+      const config = {
+        getCoreTools: () => undefined,
+        getExcludeTools: () => undefined,
+      } as Config;
+      const shellTool = new ShellTool(config);
+      (ShellTool as any).sudoCache = {
+        password: 'cached',
+        expires: Date.now() + 1000,
+      };
+      const promptSpy = vi.spyOn(shellTool as any, 'promptForPassword');
+      const password = await (shellTool as any).getSudoPassword();
+      expect(password).toBe('cached');
+      expect(promptSpy).not.toHaveBeenCalled();
+    });
   });
 });

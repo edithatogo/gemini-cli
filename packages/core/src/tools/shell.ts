@@ -8,6 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import crypto from 'crypto';
+import * as readline from 'readline/promises';
 import { Config } from '../config/config.js';
 import {
   BaseTool,
@@ -28,10 +29,17 @@ export interface ShellToolParams {
 import { spawn } from 'child_process';
 
 const OUTPUT_UPDATE_INTERVAL_MS = 1000;
+const SUDO_CACHE_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+
+interface SudoCache {
+  password: string;
+  expires: number;
+}
 
 export class ShellTool extends BaseTool<ShellToolParams, ToolResult> {
   static Name: string = 'run_shell_command';
   private whitelist: Set<string> = new Set();
+  private static sudoCache: SudoCache | null = null;
 
   constructor(private readonly config: Config) {
     super(
@@ -87,6 +95,29 @@ Process Group PGID: Process group started or \`(none)\``,
       description += ` (${params.description.replace(/\n/g, ' ')})`;
     }
     return description;
+  }
+
+  private async promptForPassword(): Promise<string> {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    const password = await rl.question('sudo password: ', { hideEchoBack: true });
+    rl.close();
+    return password;
+  }
+
+  async getSudoPassword(): Promise<string> {
+    const cache = ShellTool.sudoCache;
+    if (cache && cache.expires > Date.now()) {
+      return cache.password;
+    }
+    const password = await this.promptForPassword();
+    ShellTool.sudoCache = {
+      password,
+      expires: Date.now() + SUDO_CACHE_TIMEOUT_MS,
+    };
+    return password;
   }
 
   /**
@@ -278,6 +309,12 @@ Process Group PGID: Process group started or \`(none)\``,
     }
 
     const isWindows = os.platform() === 'win32';
+    let commandToRun = params.command.trim();
+    let needsSudo = false;
+    if (!isWindows && commandToRun.startsWith('sudo ')) {
+      needsSudo = true;
+      commandToRun = commandToRun.replace(/^sudo\b/, 'sudo -S -p ""');
+    }
     const tempFileName = `shell_pgrep_${crypto
       .randomBytes(6)
       .toString('hex')}.tmp`;
@@ -285,26 +322,32 @@ Process Group PGID: Process group started or \`(none)\``,
 
     // pgrep is not available on Windows, so we can't get background PIDs
     const command = isWindows
-      ? params.command
+      ? commandToRun
       : (() => {
           // wrap command to append subprocess pids (via pgrep) to temporary file
-          let command = params.command.trim();
+          let command = commandToRun;
           if (!command.endsWith('&')) command += ';';
           return `{ ${command} }; __code=$?; pgrep -g 0 >${tempFilePath} 2>&1; exit $__code;`;
         })();
 
     // spawn command in specified directory (or project root if not specified)
+    const stdio: [any, any, any] = [needsSudo ? 'pipe' : 'ignore', 'pipe', 'pipe'];
     const shell = isWindows
       ? spawn('cmd.exe', ['/c', command], {
-          stdio: ['ignore', 'pipe', 'pipe'],
+          stdio,
           // detached: true, // ensure subprocess starts its own process group (esp. in Linux)
           cwd: path.resolve(this.config.getTargetDir(), params.directory || ''),
         })
       : spawn('bash', ['-c', command], {
-          stdio: ['ignore', 'pipe', 'pipe'],
+          stdio,
           detached: true, // ensure subprocess starts its own process group (esp. in Linux)
           cwd: path.resolve(this.config.getTargetDir(), params.directory || ''),
         });
+
+    if (needsSudo) {
+      const password = await this.getSudoPassword();
+      shell.stdin.write(`${password}\n`);
+    }
 
     let exited = false;
     let stdout = '';
