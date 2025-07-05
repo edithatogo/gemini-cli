@@ -8,6 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import crypto from 'crypto';
+import { parse } from 'shell-quote';
 import { Config } from '../config/config.js';
 import {
   BaseTool,
@@ -89,6 +90,70 @@ Process Group PGID: Process group started or \`(none)\``,
     return description;
   }
 
+  // Split commands on shell separators while honoring quotes.
+  // Resolves https://github.com/google-gemini/gemini-cli/issues/2945
+  private splitCommands(command: string): string[] {
+    const result: string[] = [];
+    let current = '';
+    let quote: string | null = null;
+    let escape = false;
+
+    for (let i = 0; i < command.length; i++) {
+      const ch = command[i];
+
+      if (escape) {
+        current += ch;
+        escape = false;
+        continue;
+      }
+
+      if (ch === '\\') {
+        current += ch;
+        escape = true;
+        continue;
+      }
+
+      if (quote) {
+        current += ch;
+        if (ch === quote) {
+          quote = null;
+        }
+        continue;
+      }
+
+      if (ch === '"' || ch === "'") {
+        quote = ch;
+        current += ch;
+        continue;
+      }
+
+      if (ch === '&' && command[i + 1] === '&') {
+        if (current.trim()) result.push(current.trim());
+        current = '';
+        i++;
+        continue;
+      }
+
+      if (ch === '|' && command[i + 1] === '|') {
+        if (current.trim()) result.push(current.trim());
+        current = '';
+        i++;
+        continue;
+      }
+
+      if (ch === ';' || ch === '|') {
+        if (current.trim()) result.push(current.trim());
+        current = '';
+        continue;
+      }
+
+      current += ch;
+    }
+
+    if (current.trim()) result.push(current.trim());
+    return result;
+  }
+
   /**
    * Extracts the root command from a given shell command string.
    * This is used to identify the base command for permission checks.
@@ -99,12 +164,18 @@ Process Group PGID: Process group started or \`(none)\``,
    * @example getCommandRoot("git status && npm test") returns "git"
    */
   getCommandRoot(command: string): string | undefined {
-    return command
-      .trim() // remove leading and trailing whitespace
-      .replace(/[{}()]/g, '') // remove all grouping operators
-      .split(/[\s;&|]+/)[0] // split on any whitespace or separator or chaining operators and take first part
-      ?.split(/[/\\]/) // split on any path separators (or return undefined if previous line was undefined)
-      .pop(); // take last part and return command root (or undefined if previous line was empty)
+    const first = this.splitCommands(command)[0];
+    if (!first) return undefined;
+    const tokens = parse(first, process.env) as (string | { op: string })[];
+    for (const tok of tokens) {
+      if (typeof tok === 'string') {
+        if (/^[A-Za-z_][A-Za-z0-9_]*=.*/.test(tok)) {
+          continue;
+        }
+        return tok.split(/[/\\]/).pop();
+      }
+    }
+    return undefined;
   }
 
   /**
@@ -168,7 +239,7 @@ Process Group PGID: Process group started or \`(none)\``,
       coreTools.includes(name),
     );
 
-    const commandsToValidate = command.split(/&&|\|\||\||;/).map(normalize);
+    const commandsToValidate = this.splitCommands(command).map(normalize);
 
     for (const cmd of commandsToValidate) {
       // 2. Check if the command is on the blocklist.
