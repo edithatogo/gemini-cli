@@ -33,6 +33,13 @@ With the Gemini CLI you can:
    gemini
    ```
 
+   > **Windows users:** If the `gemini` command isn't found after installation,
+   > add your npm global `bin` folder to `PATH`. See
+   > [npm's guide to global installs](https://docs.npmjs.com/downloading-and-installing-packages-globally)
+   > for more info. Confirm the command is available with `where gemini`
+   > (or `which gemini` on Unix).
+
+
 3. **Pick a color theme**
 4. **Authenticate:** When prompted, sign in with your personal Google account. This will grant you up to 60 model requests per minute and 1,000 model requests per day using Gemini.
 
