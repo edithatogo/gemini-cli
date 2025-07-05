@@ -278,4 +278,12 @@ describe('GitService', () => {
       expect(hoistedMockCommit).not.toHaveBeenCalled();
     });
   });
+
+  describe('createFileSnapshot', () => {
+    it('should strip wrapping quotes from commit message', async () => {
+      const service = new GitService(mockProjectRoot);
+      await service.createFileSnapshot('"feat: test"');
+      expect(hoistedMockCommit).toHaveBeenCalledWith('feat: test');
+    });
+  });
 });

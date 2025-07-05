@@ -106,11 +106,32 @@ export class GitService {
     return hash.trim();
   }
 
+  /**
+   * Creates a snapshot commit for the current working tree.
+   *
+   * @param message Commit message describing the snapshot.
+   * Wrapping single or double quotes will be stripped to avoid
+   * accidental quoting in the resulting commit message.
+   */
   async createFileSnapshot(message: string): Promise<string> {
     const repo = this.shadowGitRepository;
     await repo.add('.');
-    const commitResult = await repo.commit(message);
+    const sanitizedMessage = this.stripWrappingQuotes(message);
+    const commitResult = await repo.commit(sanitizedMessage);
     return commitResult.commit;
+  }
+
+  /**
+   * Removes wrapping single or double quotes from a commit message.
+   */
+  private stripWrappingQuotes(message: string): string {
+    if (
+      (message.startsWith('"') && message.endsWith('"')) ||
+      (message.startsWith("'") && message.endsWith("'"))
+    ) {
+      return message.slice(1, -1);
+    }
+    return message;
   }
 
   async restoreProjectFromSnapshot(commitHash: string): Promise<void> {
