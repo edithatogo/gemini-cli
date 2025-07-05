@@ -6,7 +6,7 @@ The Gemini CLI requires you to authenticate with Google's AI services. On initia
     - Use this option to log in with your google account.
     - During initial startup, Gemini CLI will direct you to a webpage for authentication. Once authenticated, your credentials will be cached locally so the web login can be skipped on subsequent runs.
     - Note that the web login must be done in a browser that can communicate with the machine Gemini CLI is being run from. (Specifically, the browser will be redirected to a localhost url that Gemini CLI will be listening on).
-    - <a id="workspace-gca">Users may have to specify a GOOGLE_CLOUD_PROJECT if:</a>
+    - <a id="workspace-gca">Users may have to specify a `GOOGLE_CLOUD_PROJECT` (or `GOOGLE_CLOUD_PROJECT_ID`) if:</a>
       1. You have a Google Workspace account. Google Workspace is a paid service for businesses and organizations that provides a suite of productivity tools, including a custom email domain (e.g. your-name@your-company.com), enhanced security features, and administrative controls. These accounts are often managed by an employer or school.
       1. You have received a free Code Assist license through the [Google Developer Program](https://developers.google.com/program/plans-and-pricing) (including qualified Google Developer Experts)
       1. You have been assigned a license to a current Gemini Code Assist standard or enterprise subscription.
@@ -14,7 +14,7 @@ The Gemini CLI requires you to authenticate with Google's AI services. On initia
       1. You are a Google account holder under the age of 18
       - If you fall into one of these categories, you must first configure a Google Cloud Project Id to use, [enable the Gemini for Cloud API](https://cloud.google.com/gemini/docs/discover/set-up-gemini#enable-api) and [configure access permissions](https://cloud.google.com/gemini/docs/discover/set-up-gemini#grant-iam).
 
-      You can temporarily set the environment variable in your current shell session using the following command:
+      You can temporarily set the environment variable in your current shell session using the following command (or set `GOOGLE_CLOUD_PROJECT_ID` if you prefer):
 
       ```bash
       export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
@@ -47,7 +47,7 @@ The Gemini CLI requires you to authenticate with Google's AI services. On initia
         gcloud auth application-default login
         ```
         For more information, see [Set up Application Default Credentials for Google Cloud](https://cloud.google.com/docs/authentication/provide-credentials-adc).
-      - Set the `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`, and `GOOGLE_GENAI_USE_VERTEXAI` environment variables. In the following methods, replace `YOUR_PROJECT_ID` and `YOUR_PROJECT_LOCATION` with the relevant values for your project:
+      - Set the `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`, and `GOOGLE_GENAI_USE_VERTEXAI` environment variables. If `GOOGLE_CLOUD_PROJECT` is not set, you can use `GOOGLE_CLOUD_PROJECT_ID`. In the following methods, replace `YOUR_PROJECT_ID` and `YOUR_PROJECT_LOCATION` with the relevant values for your project:
         - You can temporarily set these environment variables in your current shell session using the following commands:
           ```bash
           export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
@@ -96,7 +96,7 @@ Gemini CLI automatically loads environment variables from the **first** `.env` f
 
 ```bash
 mkdir -p .gemini
-echo 'GOOGLE_CLOUD_PROJECT="your-project-id"' >> .gemini/.env
+echo 'GOOGLE_CLOUD_PROJECT="your-project-id"' >> .gemini/.env  # or GOOGLE_CLOUD_PROJECT_ID
 ```
 
 **User-wide settings** (available in every directory):
@@ -104,7 +104,7 @@ echo 'GOOGLE_CLOUD_PROJECT="your-project-id"' >> .gemini/.env
 ```bash
 mkdir -p ~/.gemini
 cat >> ~/.gemini/.env <<'EOF'
-GOOGLE_CLOUD_PROJECT="your-project-id"
+GOOGLE_CLOUD_PROJECT="your-project-id" # or GOOGLE_CLOUD_PROJECT_ID
 GEMINI_API_KEY="your-gemini-api-key"
 EOF
 ```

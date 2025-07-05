@@ -92,7 +92,8 @@ Use the `npm run telemetry -- --target=gcp` command to automate setting up a loc
 
 1.  **Prerequisites**:
     - Have a Google Cloud project ID.
-    - Export the `GOOGLE_CLOUD_PROJECT` environment variable to make it available to the OTEL collector.
+    - Export the `GOOGLE_CLOUD_PROJECT` environment variable to make it available to the OTEL collector. If
+      this variable is not set, `GOOGLE_CLOUD_PROJECT_ID` will be used as a fallback.
       ```bash
       export OTLP_GOOGLE_CLOUD_PROJECT="your-project-id"
       ```
