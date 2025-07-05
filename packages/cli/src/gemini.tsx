@@ -165,6 +165,7 @@ export async function main() {
     }
   }
   let input = config.getQuestion();
+  const hasPromptArg = Boolean(input && input.length > 0);
   const startupWarnings = await getStartupWarnings();
 
   // Render UI, passing necessary config values. Check that there is no command line question.
@@ -182,9 +183,9 @@ export async function main() {
     );
     return;
   }
-  // If not a TTY, read from stdin
+  // If not a TTY and no prompt was provided via -p, read from stdin
   // This is for cases where the user pipes input directly into the command
-  if (!process.stdin.isTTY) {
+  if (!process.stdin.isTTY && !hasPromptArg) {
     input += await readStdin();
   }
   if (!input) {
