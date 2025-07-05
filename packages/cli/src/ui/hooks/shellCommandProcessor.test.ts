@@ -176,4 +176,42 @@ describe('useShellCommandProcessor', () => {
       text: 'Command exited with code 127.\ncommand not found',
     });
   });
+
+  it('should pass through ANSI color codes while streaming', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+
+    const { result } = renderProcessorHook();
+    const abortController = new AbortController();
+
+    act(() => {
+      result.current.handleShellCommand('echo', abortController.signal);
+    });
+
+    const execPromise = onExecMock.mock.calls[0][0];
+
+    const colored = '\u001b[31mred\u001b[0m';
+    act(() => {
+      vi.setSystemTime(1100);
+      spawnEmitter.stdout.emit('data', Buffer.from(colored));
+    });
+
+    act(() => {
+      spawnEmitter.emit('exit', 0, null);
+    });
+
+    await act(async () => {
+      await execPromise;
+    });
+
+    expect(setPendingHistoryItemMock).toHaveBeenCalledWith({
+      type: 'info',
+      text: colored,
+    });
+
+    expect(addItemToHistoryMock.mock.calls[1][0]).toEqual({
+      type: 'info',
+      text: 'red',
+    });
+  });
 });

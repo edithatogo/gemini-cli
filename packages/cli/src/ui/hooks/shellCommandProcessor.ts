@@ -71,6 +71,8 @@ function executeShellCommand(
 
     let stdout = '';
     let stderr = '';
+    let stdoutRaw = '';
+    let stderrRaw = '';
     const outputChunks: Buffer[] = [];
     let error: Error | null = null;
     let exited = false;
@@ -99,14 +101,16 @@ function executeShellCommand(
           ? stdoutDecoder.write(data)
           : stderrDecoder.write(data);
       if (stream === 'stdout') {
+        stdoutRaw += decodedChunk;
         stdout += stripAnsi(decodedChunk);
       } else {
+        stderrRaw += decodedChunk;
         stderr += stripAnsi(decodedChunk);
       }
 
       if (!exited && streamToUi) {
         // Send only the new chunk to avoid re-rendering the whole output.
-        const combinedOutput = stdout + (stderr ? `\n${stderr}` : '');
+        const combinedOutput = stdoutRaw + (stderrRaw ? `\n${stderrRaw}` : '');
         onOutputChunk(combinedOutput);
       } else if (!exited && !streamToUi) {
         // Send progress updates for the binary stream
@@ -155,8 +159,12 @@ function executeShellCommand(
       abortSignal.removeEventListener('abort', abortHandler);
 
       // Handle any final bytes lingering in the decoders
-      stdout += stdoutDecoder.end();
-      stderr += stderrDecoder.end();
+      const stdoutTail = stdoutDecoder.end();
+      const stderrTail = stderrDecoder.end();
+      stdoutRaw += stdoutTail;
+      stderrRaw += stderrTail;
+      stdout += stripAnsi(stdoutTail);
+      stderr += stripAnsi(stderrTail);
 
       const finalBuffer = Buffer.concat(outputChunks);
 
