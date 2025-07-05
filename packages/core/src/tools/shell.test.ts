@@ -335,4 +335,26 @@ describe('ShellTool', () => {
     const isAllowed = shellTool.isCommandAllowed('gh issue list || rm -rf /');
     expect(isAllowed).toBe(false);
   });
+
+  it('should allow a command containing operators inside quotes', async () => {
+    const config = {
+      getCoreTools: () => ['run_shell_command(echo)'],
+      getExcludeTools: () => [],
+    } as unknown as Config;
+    const shellTool = new ShellTool(config);
+    const isAllowed = shellTool.isCommandAllowed('echo "foo && bar"');
+    expect(isAllowed).toBe(true);
+  });
+
+  it('should allow a command with spaces inside quoted arguments', async () => {
+    const config = {
+      getCoreTools: () => ['run_shell_command(gh issue create)'],
+      getExcludeTools: () => [],
+    } as unknown as Config;
+    const shellTool = new ShellTool(config);
+    const isAllowed = shellTool.isCommandAllowed(
+      'gh issue create --title "fix all the things"',
+    );
+    expect(isAllowed).toBe(true);
+  });
 });
