@@ -20,6 +20,10 @@ import {
 } from '../types.js';
 import { UseHistoryManagerReturn } from './useHistoryManager.js';
 
+function normalizePathForWindows(p: string): string {
+  return process.platform === 'win32' ? p.replace(/\\/g, '/') : p;
+}
+
 interface HandleAtCommandParams {
   query: string;
   config: Config;
@@ -191,16 +195,16 @@ export async function handleAtCommand({
       continue;
     }
 
-    let currentPathSpec = pathName;
+    let currentPathSpec = normalizePathForWindows(pathName);
     let resolvedSuccessfully = false;
 
     try {
       const absolutePath = path.resolve(config.getTargetDir(), pathName);
       const stats = await fs.stat(absolutePath);
       if (stats.isDirectory()) {
-        currentPathSpec = pathName.endsWith('/')
-          ? `${pathName}**`
-          : `${pathName}/**`;
+        currentPathSpec = normalizePathForWindows(
+          pathName.endsWith('/') ? `${pathName}**` : `${pathName}/**`,
+        );
         onDebugMessage(
           `Path ${pathName} resolved to directory, using glob: ${currentPathSpec}`,
         );
@@ -228,9 +232,8 @@ export async function handleAtCommand({
               const lines = globResult.llmContent.split('\n');
               if (lines.length > 1 && lines[1]) {
                 const firstMatchAbsolute = lines[1].trim();
-                currentPathSpec = path.relative(
-                  config.getTargetDir(),
-                  firstMatchAbsolute,
+                currentPathSpec = normalizePathForWindows(
+                  path.relative(config.getTargetDir(), firstMatchAbsolute),
                 );
                 onDebugMessage(
                   `Glob search for ${pathName} found ${firstMatchAbsolute}, using relative path: ${currentPathSpec}`,

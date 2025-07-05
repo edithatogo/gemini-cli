@@ -22,6 +22,10 @@ import {
 } from '../components/SuggestionsDisplay.js';
 import { SlashCommand } from './slashCommandProcessor.js';
 
+function normalizePathForWindows(p: string): string {
+  return process.platform === 'win32' ? p.replace(/\\/g, '/') : p;
+}
+
 export interface UseCompletionReturn {
   suggestions: Suggestion[];
   activeSuggestionIndex: number;
@@ -254,11 +258,12 @@ export function useCompletion(
           }
 
           if (entry.name.toLowerCase().startsWith(lowerSearchPrefix)) {
+            const suggestionPath = normalizePathForWindows(
+              entryPathRelative + (entry.isDirectory() ? '/' : ''),
+            );
             foundSuggestions.push({
-              label: entryPathRelative + (entry.isDirectory() ? '/' : ''),
-              value: escapePath(
-                entryPathRelative + (entry.isDirectory() ? '/' : ''),
-              ),
+              label: suggestionPath,
+              value: escapePath(suggestionPath),
             });
           }
           if (
@@ -301,7 +306,9 @@ export function useCompletion(
 
       const suggestions: Suggestion[] = files
         .map((file: string) => {
-          const relativePath = path.relative(cwd, file);
+          const relativePath = normalizePathForWindows(
+            path.relative(cwd, file),
+          );
           return {
             label: relativePath,
             value: escapePath(relativePath),
