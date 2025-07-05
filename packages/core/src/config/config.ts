@@ -122,6 +122,7 @@ export interface ConfigParameters {
   fileFiltering?: {
     respectGitIgnore?: boolean;
     enableRecursiveFileSearch?: boolean;
+    includeIgnored?: boolean;
   };
   checkpointing?: boolean;
   proxy?: string;
@@ -159,6 +160,7 @@ export class Config {
   private readonly fileFiltering: {
     respectGitIgnore: boolean;
     enableRecursiveFileSearch: boolean;
+    includeIgnored: boolean;
   };
   private fileDiscoveryService: FileDiscoveryService | null = null;
   private gitService: GitService | undefined = undefined;
@@ -203,6 +205,7 @@ export class Config {
       respectGitIgnore: params.fileFiltering?.respectGitIgnore ?? true,
       enableRecursiveFileSearch:
         params.fileFiltering?.enableRecursiveFileSearch ?? true,
+      includeIgnored: params.fileFiltering?.includeIgnored ?? false,
     };
     this.checkpointing = params.checkpointing ?? false;
     this.proxy = params.proxy;
@@ -412,6 +415,10 @@ export class Config {
 
   getFileFilteringRespectGitIgnore(): boolean {
     return this.fileFiltering.respectGitIgnore;
+  }
+
+  getFileFilteringIncludeIgnored(): boolean {
+    return this.fileFiltering.includeIgnored;
   }
 
   getCheckpointingEnabled(): boolean {

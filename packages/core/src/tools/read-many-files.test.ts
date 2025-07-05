@@ -399,5 +399,14 @@ describe('ReadManyFilesTool', () => {
       expect(result.returnDisplay).not.toContain('foo.quux');
       expect(result.returnDisplay).toContain('bar.ts');
     });
+
+    it('should include git-ignored .log files when include_ignored is true', async () => {
+      fs.mkdirSync(path.join(tempRootDir, '.git'));
+      fs.writeFileSync(path.join(tempRootDir, '.gitignore'), '*.log');
+      createFile('debug.log', 'hello');
+      const params = { paths: ['*.log'], include_ignored: true };
+      const result = await tool.execute(params, new AbortController().signal);
+      expect(result.llmContent).toEqual(['--- debug.log ---\n\nhello\n\n']);
+    });
   });
 });

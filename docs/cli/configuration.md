@@ -56,11 +56,13 @@ In addition to a project settings file, a project's `.gemini` directory can cont
   - **Properties:**
     - **`respectGitIgnore`** (boolean): Whether to respect .gitignore patterns when discovering files. When set to `true`, git-ignored files (like `node_modules/`, `dist/`, `.env`) are automatically excluded from @ commands and file listing operations.
     - **`enableRecursiveFileSearch`** (boolean): Whether to enable searching recursively for filenames under the current tree when completing @ prefixes in the prompt.
+    - **`includeIgnored`** (boolean): Include files that match `.gitignore` when using `@` commands or file discovery tools.
   - **Example:**
     ```json
     "fileFiltering": {
       "respectGitIgnore": true,
-      "enableRecursiveFileSearch": false
+      "enableRecursiveFileSearch": false,
+      "includeIgnored": true
     }
     ```
 

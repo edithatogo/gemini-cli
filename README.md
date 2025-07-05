@@ -74,6 +74,13 @@ gemini
 > Give me a summary of all of the changes that went in yesterday
 ```
 
+### Reading git-ignored files
+
+By default, the CLI and its tools skip files listed in your `.gitignore`. To
+include these files in commands like `@` or `read_many_files`, enable the
+`includeIgnored` setting under `fileFiltering` in your `.gemini/settings.json`
+or pass `include_ignored: true` to the `read_many_files` tool.
+
 ### Next steps
 
 - Learn how to [contribute to or build from the source](./CONTRIBUTING.md).

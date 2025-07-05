@@ -10,7 +10,7 @@ import ignore, { type Ignore } from 'ignore';
 import { isGitRepository } from './gitUtils.js';
 
 export interface GitIgnoreFilter {
-  isIgnored(filePath: string): boolean;
+  isIgnored(filePath: string, includeIgnored?: boolean): boolean;
   getPatterns(): string[];
 }
 
@@ -56,7 +56,10 @@ export class GitIgnoreParser implements GitIgnoreFilter {
     this.patterns.push(...patterns);
   }
 
-  isIgnored(filePath: string): boolean {
+  isIgnored(filePath: string, includeIgnored = false): boolean {
+    if (includeIgnored) {
+      return false;
+    }
     const relativePath = path.isAbsolute(filePath)
       ? path.relative(this.projectRoot, filePath)
       : filePath;

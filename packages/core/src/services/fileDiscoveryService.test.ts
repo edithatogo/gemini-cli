@@ -92,6 +92,19 @@ describe('FileDiscoveryService', () => {
       expect(filtered).toEqual(files);
     });
 
+    it('should include files when includeIgnored is true', () => {
+      const files = [
+        'node_modules/package/index.js',
+        'src/index.ts',
+      ];
+      mockGitIgnoreParser.isIgnored.mockReturnValue(true);
+      const filtered = service.filterFiles(files, {
+        respectGitIgnore: true,
+        includeIgnored: true,
+      });
+      expect(filtered).toEqual(files);
+    });
+
     it('should handle empty file list', () => {
       const filtered = service.filterFiles([]);
       expect(filtered).toEqual([]);
@@ -114,6 +127,12 @@ describe('FileDiscoveryService', () => {
 
     it('should return false for non-ignored files', () => {
       expect(service.shouldGitIgnoreFile('src/index.ts')).toBe(false);
+    });
+
+    it('should return false when includeIgnored is true', () => {
+      expect(
+        service.shouldGitIgnoreFile('node_modules/package/index.js', true),
+      ).toBe(false);
     });
   });
 

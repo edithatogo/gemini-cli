@@ -13,6 +13,7 @@ const GEMINI_IGNORE_FILE_NAME = '.geminiignore';
 export interface FilterFilesOptions {
   respectGitIgnore?: boolean;
   respectGeminiIgnore?: boolean;
+  includeIgnored?: boolean;
 }
 
 export class FileDiscoveryService {
@@ -48,10 +49,14 @@ export class FileDiscoveryService {
     options: FilterFilesOptions = {
       respectGitIgnore: true,
       respectGeminiIgnore: true,
+      includeIgnored: false,
     },
   ): string[] {
     return filePaths.filter((filePath) => {
-      if (options.respectGitIgnore && this.shouldGitIgnoreFile(filePath)) {
+      if (
+        options.respectGitIgnore &&
+        this.shouldGitIgnoreFile(filePath, options.includeIgnored)
+      ) {
         return false;
       }
       if (
@@ -67,7 +72,8 @@ export class FileDiscoveryService {
   /**
    * Checks if a single file should be git-ignored
    */
-  shouldGitIgnoreFile(filePath: string): boolean {
+  shouldGitIgnoreFile(filePath: string, includeIgnored = false): boolean {
+    if (includeIgnored) return false;
     if (this.gitIgnoreFilter) {
       return this.gitIgnoreFilter.isIgnored(filePath);
     }

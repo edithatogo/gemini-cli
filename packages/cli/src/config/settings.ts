@@ -59,6 +59,7 @@ export interface Settings {
   fileFiltering?: {
     respectGitIgnore?: boolean;
     enableRecursiveFileSearch?: boolean;
+    includeIgnored?: boolean;
   };
 
   // UI setting. Does not display the ANSI-controlled terminal title.
