@@ -45,9 +45,11 @@ The Gemini API provides a free tier with [100 requests per day](https://ai.googl
 1. Generate a key from [Google AI Studio](https://aistudio.google.com/apikey).
 2. Set it as an environment variable in your terminal. Replace `YOUR_API_KEY` with your generated key.
 
-   ```bash
-   export GEMINI_API_KEY="YOUR_API_KEY"
-   ```
+ ```bash
+ export GEMINI_API_KEY="YOUR_API_KEY"
+ # Optional: override the default Flash fallback model
+ export GEMINI_FLASH_MODEL="gemini-2.5-flash"
+ ```
 
 3. (Optionally) Upgrade your Gemini API project to a paid plan on the API key page (will automatically unlock [Tier 1 rate limits](https://ai.google.dev/gemini-api/docs/rate-limits#tier-1))
 

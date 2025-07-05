@@ -239,6 +239,10 @@ The CLI automatically loads environment variables from an `.env` file. The loadi
   - Specifies the default Gemini model to use.
   - Overrides the hardcoded default
   - Example: `export GEMINI_MODEL="gemini-2.5-flash"`
+- **`GEMINI_FLASH_MODEL`**:
+  - Specifies the fallback Flash model.
+  - Overrides the hardcoded default used when the Pro model is unavailable.
+  - Example: `export GEMINI_FLASH_MODEL="gemini-2.5-flash"`
 - **`GOOGLE_API_KEY`**:
   - Your Google Cloud API key.
   - Required for using Vertex AI in express mode.
