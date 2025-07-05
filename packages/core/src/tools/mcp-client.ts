@@ -269,7 +269,11 @@ async function connectAndDiscover(
     updateMCPServerStatus(mcpServerName, MCPServerStatus.DISCONNECTED);
   };
 
-  if (transport instanceof StdioClientTransport && transport.stderr) {
+  if (
+    process.env.DEBUG_SHOW_MCP_LOGS === 'true' &&
+    transport instanceof StdioClientTransport &&
+    transport.stderr
+  ) {
     transport.stderr.on('data', (data) => {
       const stderrStr = data.toString();
       // Filter out verbose INFO logs from some MCP servers

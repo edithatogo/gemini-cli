@@ -650,6 +650,38 @@ describe('discoverMcpTools', () => {
       clientInstances[clientInstances.length - 1]?.value;
     expect(lastClientInstance?.onerror).toEqual(expect.any(Function));
   });
+
+  it('should not attach stderr listener when DEBUG_SHOW_MCP_LOGS is not true', async () => {
+    const serverConfig: MCPServerConfig = { command: './mcp-stdio' };
+    mockConfig.getMcpServers.mockReturnValue({ server: serverConfig });
+    const original = process.env.DEBUG_SHOW_MCP_LOGS;
+    delete process.env.DEBUG_SHOW_MCP_LOGS;
+
+    await discoverMcpTools(
+      mockConfig.getMcpServers() ?? {},
+      mockConfig.getMcpServerCommand(),
+      mockToolRegistry as any,
+    );
+
+    expect(mockGlobalStdioStderrOn).not.toHaveBeenCalled();
+    if (original !== undefined) process.env.DEBUG_SHOW_MCP_LOGS = original;
+  });
+
+  it('should attach stderr listener when DEBUG_SHOW_MCP_LOGS is true', async () => {
+    const serverConfig: MCPServerConfig = { command: './mcp-stdio' };
+    mockConfig.getMcpServers.mockReturnValue({ server: serverConfig });
+    const original = process.env.DEBUG_SHOW_MCP_LOGS;
+    process.env.DEBUG_SHOW_MCP_LOGS = 'true';
+
+    await discoverMcpTools(
+      mockConfig.getMcpServers() ?? {},
+      mockConfig.getMcpServerCommand(),
+      mockToolRegistry as any,
+    );
+
+    expect(mockGlobalStdioStderrOn).toHaveBeenCalledWith('data', expect.any(Function));
+    if (original === undefined) delete process.env.DEBUG_SHOW_MCP_LOGS; else process.env.DEBUG_SHOW_MCP_LOGS = original;
+  });
 });
 
 describe('sanitizeParameters', () => {
