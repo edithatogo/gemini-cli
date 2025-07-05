@@ -546,6 +546,11 @@ export async function start_sandbox(
     args.push('--env', `GEMINI_MODEL=${process.env.GEMINI_MODEL}`);
   }
 
+  // copy GEMINI_FLASH_MODEL
+  if (process.env.GEMINI_FLASH_MODEL) {
+    args.push('--env', `GEMINI_FLASH_MODEL=${process.env.GEMINI_FLASH_MODEL}`);
+  }
+
   // copy TERM and COLORTERM to try to maintain terminal setup
   if (process.env.TERM) {
     args.push('--env', `TERM=${process.env.TERM}`);
