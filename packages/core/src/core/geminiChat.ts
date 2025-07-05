@@ -191,7 +191,10 @@ export class GeminiChat {
    * Handles fallback to Flash model when persistent 429 errors occur for OAuth users.
    * Uses a fallback handler if provided by the config, otherwise returns null.
    */
-  private async handleFlashFallback(authType?: string): Promise<string | null> {
+  private async handleFlashFallback(
+    authType?: string,
+    reason: 'rate_limit' | 'model_unavailable' = 'rate_limit',
+  ): Promise<string | null> {
     // Only handle fallback for OAuth users
     if (authType !== AuthType.LOGIN_WITH_GOOGLE) {
       return null;
@@ -209,6 +212,11 @@ export class GeminiChat {
     const fallbackHandler = this.config.flashFallbackHandler;
     if (typeof fallbackHandler === 'function') {
       try {
+        if (reason === 'model_unavailable') {
+          console.warn(
+            `Model ${currentModel} is not available. Falling back to ${fallbackModel}.`,
+          );
+        }
         const accepted = await fallbackHandler(currentModel, fallbackModel);
         if (accepted) {
           this.config.setModel(fallbackModel);
@@ -271,7 +279,7 @@ export class GeminiChat {
           return false;
         },
         onPersistent429: async (authType?: string) =>
-          await this.handleFlashFallback(authType),
+          await this.handleFlashFallback(authType, 'rate_limit'),
         authType: this.config.getContentGeneratorConfig()?.authType,
       });
       const durationMs = Date.now() - startTime;
@@ -368,7 +376,7 @@ export class GeminiChat {
           return false; // Don't retry other errors by default
         },
         onPersistent429: async (authType?: string) =>
-          await this.handleFlashFallback(authType),
+          await this.handleFlashFallback(authType, 'rate_limit'),
         authType: this.config.getContentGeneratorConfig()?.authType,
       });
 

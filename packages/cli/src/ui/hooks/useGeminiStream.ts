@@ -24,6 +24,8 @@ import {
   ThoughtSummary,
   UnauthorizedError,
   UserPromptEvent,
+  DEFAULT_GEMINI_MODEL,
+  DEFAULT_GEMINI_FLASH_MODEL,
 } from '@google/gemini-cli-core';
 import { type Part, type PartListUnion } from '@google/genai';
 import {
@@ -392,7 +394,7 @@ export const useGeminiStream = (
   );
 
   const handleErrorEvent = useCallback(
-    (eventValue: ErrorEvent['value'], userMessageTimestamp: number) => {
+    async (eventValue: ErrorEvent['value'], userMessageTimestamp: number) => {
       if (pendingHistoryItemRef.current) {
         addItem(pendingHistoryItemRef.current, userMessageTimestamp);
         setPendingHistoryItem(null);
@@ -407,8 +409,28 @@ export const useGeminiStream = (
         },
         userMessageTimestamp,
       );
+
+      const status = eventValue.error.status;
+      const message = eventValue.error.message.toLowerCase();
+      if (
+        config.getModel() === DEFAULT_GEMINI_MODEL &&
+        (status === 404 ||
+          status === 403 ||
+          message.includes('not found') ||
+          message.includes('not available'))
+      ) {
+        await (geminiClient as unknown as {
+          handleFlashFallback(
+            authType?: string,
+            reason?: 'rate_limit' | 'model_unavailable',
+          ): Promise<string | null>;
+        }).handleFlashFallback(
+          config.getContentGeneratorConfig().authType,
+          'model_unavailable',
+        );
+      }
     },
-    [addItem, pendingHistoryItemRef, setPendingHistoryItem, config],
+    [addItem, pendingHistoryItemRef, setPendingHistoryItem, config, geminiClient],
   );
 
   const handleChatCompressionEvent = useCallback(
