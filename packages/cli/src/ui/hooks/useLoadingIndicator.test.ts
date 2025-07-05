@@ -19,8 +19,11 @@ describe('useLoadingIndicator', () => {
   });
 
   afterEach(() => {
-    vi.useRealTimers(); // Restore real timers after each test
-    act(() => vi.runOnlyPendingTimers);
+    act(() => {
+      vi.runOnlyPendingTimers();
+    });
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   it('should initialize with default values when Idle', () => {
@@ -32,6 +35,10 @@ describe('useLoadingIndicator', () => {
   });
 
   it('should reflect values when Responding', async () => {
+    vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.5);
+
     const { result } = renderHook(() =>
       useLoadingIndicator(StreamingState.Responding),
     );
