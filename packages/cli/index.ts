@@ -9,8 +9,23 @@
 import './src/gemini.js';
 import { main } from './src/gemini.js';
 
+function getWorkspaceRootArg(): string | undefined {
+  const args = process.argv.slice(2);
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === '--workspace-root' && i + 1 < args.length) {
+      return args[i + 1];
+    }
+    if (arg.startsWith('--workspace-root=')) {
+      return arg.substring('--workspace-root='.length);
+    }
+  }
+  return undefined;
+}
+
 // --- Global Entry Point ---
-main().catch((error) => {
+const workspaceRoot = getWorkspaceRootArg();
+main(workspaceRoot).catch((error) => {
   console.error('An unexpected critical error occurred:');
   if (error instanceof Error) {
     console.error(error.stack);

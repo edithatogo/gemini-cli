@@ -82,8 +82,15 @@ async function relaunchWithAdditionalArgs(additionalArgs: string[]) {
   process.exit(0);
 }
 
-export async function main() {
-  const workspaceRoot = process.cwd();
+import path from 'node:path';
+
+export async function main(workspaceRootArg?: string) {
+  const workspaceRoot = workspaceRootArg
+    ? path.resolve(workspaceRootArg)
+    : process.cwd();
+  if (workspaceRootArg) {
+    process.chdir(workspaceRoot);
+  }
   const settings = loadSettings(workspaceRoot);
 
   await cleanupCheckpoints();

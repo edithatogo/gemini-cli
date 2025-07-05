@@ -74,6 +74,13 @@ gemini
 > Give me a summary of all of the changes that went in yesterday
 ```
 
+If you need to run the CLI while pointing to a different project directory, use
+the `--workspace-root` option:
+
+```sh
+gemini --workspace-root ../other-project
+```
+
 ### Next steps
 
 - Learn how to [contribute to or build from the source](./CONTRIBUTING.md).
