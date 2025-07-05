@@ -89,7 +89,14 @@ export async function getOauthClient(): Promise<OAuth2Client> {
       `Attempting to open authentication page in your browser.\n` +
       `Otherwise navigate to:\n\n${webLogin.authUrl}\n\n`,
   );
-  await open(webLogin.authUrl);
+  try {
+    await open(webLogin.authUrl);
+  } catch {
+    // #3270 - handle environments without a default browser
+    console.warn(
+      `No default browser detected—manually open: ${webLogin.authUrl}`,
+    );
+  }
   console.log('Waiting for authentication...');
 
   await webLogin.loginCompletePromise;

@@ -14,6 +14,8 @@ import open from 'open';
 import crypto from 'crypto';
 import * as os from 'os';
 
+const originalConsoleWarn = console.warn;
+
 vi.mock('os', async (importOriginal) => {
   const os = await importOriginal<typeof import('os')>();
   return {
@@ -38,9 +40,11 @@ describe('oauth2', () => {
       path.join(os.tmpdir(), 'gemini-cli-test-home-'),
     );
     vi.mocked(os.homedir).mockReturnValue(tempHomeDir);
+    console.warn = vi.fn();
   });
   afterEach(() => {
     fs.rmSync(tempHomeDir, { recursive: true, force: true });
+    console.warn = originalConsoleWarn;
   });
 
   it('should perform a web login', async () => {
@@ -168,5 +172,66 @@ describe('oauth2', () => {
 
     // Verify the getCachedGoogleAccountId function works
     expect(getCachedGoogleAccountId()).toBe('test-google-account-id-123');
+  });
+
+  it('warns when browser cannot be opened', async () => {
+    const mockAuthUrl = 'https://example.com/auth';
+    const mockState = 'test-state';
+    const mockTokens = { access_token: 'a', refresh_token: 'r' };
+
+    const mockOAuth2Client = {
+      generateAuthUrl: vi.fn().mockReturnValue(mockAuthUrl),
+      getToken: vi.fn().mockResolvedValue({ tokens: mockTokens }),
+      setCredentials: vi.fn(),
+      getAccessToken: vi.fn().mockResolvedValue({ token: 't' }),
+      refreshAccessToken: vi.fn().mockImplementation((cb) => cb(null, { id_token: 'jwt' })),
+      verifyIdToken: vi.fn().mockResolvedValue({ getPayload: () => ({ sub: 'id' }) }),
+      credentials: mockTokens,
+      on: vi.fn(),
+    } as unknown as OAuth2Client;
+    vi.mocked(OAuth2Client).mockImplementation(() => mockOAuth2Client);
+
+    vi.spyOn(crypto, 'randomBytes').mockReturnValue(mockState as never);
+    vi.mocked(open).mockImplementation(async () => {
+      throw new Error('no-browser');
+    });
+
+    vi.mocked(global.fetch).mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ id: 'id' }),
+    } as unknown as Response);
+
+    let requestCallback!: http.RequestListener<http.IncomingMessage, http.ServerResponse>;
+    let serverListening!: () => void;
+    const serverListeningPromise = new Promise<void>((resolve) => (serverListening = resolve));
+
+    let capturedPort = 0;
+    const mockHttpServer = {
+      listen: vi.fn((port: number, cb?: () => void) => {
+        capturedPort = port;
+        cb?.();
+        serverListening();
+      }),
+      close: vi.fn((cb?: () => void) => cb?.()),
+      on: vi.fn(),
+      address: () => ({ port: capturedPort }),
+    } as unknown as http.Server;
+    vi.mocked(http.createServer).mockImplementation((cb) => {
+      requestCallback = cb as http.RequestListener<http.IncomingMessage, http.ServerResponse>;
+      return mockHttpServer;
+    });
+
+    const clientPromise = getOauthClient();
+    await serverListeningPromise;
+
+    await requestCallback({ url: `/oauth2callback?code=x&state=${mockState}` } as http.IncomingMessage, {
+      writeHead: vi.fn(),
+      end: vi.fn(),
+    } as unknown as http.ServerResponse);
+
+    await clientPromise;
+    expect(console.warn).toHaveBeenCalledWith(
+      `No default browser detected—manually open: ${mockAuthUrl}`,
+    );
   });
 });
