@@ -277,6 +277,9 @@ The CLI automatically loads environment variables from an `.env` file. The loadi
 - **`CODE_ASSIST_ENDPOINT`**:
   - Specifies the endpoint for the code assist server.
   - This is useful for development and testing.
+- **`DEBUG_SHOW_MCP_LOGS`**:
+  - When set to any value, stderr output from MCP servers is logged for debugging.
+  - By default these logs are suppressed.
 
 ## Command-Line Arguments
 
