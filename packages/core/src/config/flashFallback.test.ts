@@ -4,9 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Config } from './config.js';
-import { DEFAULT_GEMINI_MODEL, DEFAULT_GEMINI_FLASH_MODEL } from './models.js';
+import {
+  DEFAULT_GEMINI_MODEL,
+  DEFAULT_GEMINI_FLASH_MODEL,
+} from './models.js';
+import { GeminiClient } from '../core/client.js';
 
 describe('Flash Model Fallback Configuration', () => {
   let config: Config;
@@ -134,6 +138,33 @@ describe('Flash Model Fallback Configuration', () => {
       // Should not crash when contentGeneratorConfig is undefined
       expect(() => newConfig.resetModelToDefault()).not.toThrow();
       expect(newConfig.isModelSwitchedDuringSession()).toBe(false);
+    });
+  });
+
+  describe('handleFlashFallback warning', () => {
+    it('should emit a warning when pro model is unavailable', async () => {
+      const newConfig = new Config({
+        sessionId: 'warn-test',
+        targetDir: '/test',
+        debugMode: false,
+        cwd: '/test',
+        model: DEFAULT_GEMINI_MODEL,
+      });
+      (newConfig as any).contentGeneratorConfig = {
+        model: DEFAULT_GEMINI_MODEL,
+        authType: 'oauth-personal',
+      };
+      const client = new GeminiClient(newConfig as unknown as Config);
+      newConfig.setFlashFallbackHandler(async () => true);
+      newConfig.setModel = vi.fn();
+      console.warn = vi.fn();
+      await (client as any).handleFlashFallback(
+        'oauth-personal',
+        'model_unavailable',
+      );
+      expect(console.warn).toHaveBeenCalledWith(
+        `Model ${DEFAULT_GEMINI_MODEL} is not available. Falling back to ${DEFAULT_GEMINI_FLASH_MODEL}.`,
+      );
     });
   });
 });
