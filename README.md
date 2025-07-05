@@ -26,10 +26,12 @@ With the Gemini CLI you can:
    npx https://github.com/google-gemini/gemini-cli
    ```
 
-   Or install it with:
+   Alternatively, install it globally with your preferred package manager:
 
    ```bash
    npm install -g @google/gemini-cli
+   # or
+   pnpm add -g @google-gemini/gemini-cli
    gemini
    ```
 
