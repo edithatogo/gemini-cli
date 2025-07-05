@@ -51,6 +51,18 @@ The Gemini API provides a free tier with [100 requests per day](https://ai.googl
 
 3. (Optionally) Upgrade your Gemini API project to a paid plan on the API key page (will automatically unlock [Tier 1 rate limits](https://ai.google.dev/gemini-api/docs/rate-limits#tier-1))
 
+### Use a Vertex AI API key:
+
+If you prefer Vertex AI's Express Mode, you'll need a Google Cloud API key:
+
+1. Follow the [Vertex AI API key instructions](https://cloud.google.com/vertex-ai/generative-ai/docs/start/api-key) to generate a key.
+2. Set the environment variables in your terminal. Replace `YOUR_VERTEX_API_KEY` with your generated key.
+
+   ```bash
+   export GOOGLE_API_KEY="YOUR_VERTEX_API_KEY"
+   export GOOGLE_GENAI_USE_VERTEXAI=true
+   ```
+
 For other authentication methods, including Google Workspace accounts, see the [authentication](./docs/cli/authentication.md) guide.
 
 ## Examples
