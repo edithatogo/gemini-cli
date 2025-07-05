@@ -17,7 +17,7 @@ import {
   ToolCallConfirmationDetails,
 } from './tools.js';
 import { SchemaValidator } from '../utils/schemaValidator.js';
-import { makeRelative, shortenPath } from '../utils/paths.js';
+import { makeRelative, formatDisplayPath } from '../utils/paths.js';
 import { getErrorMessage, isNodeError } from '../utils/errors.js';
 import {
   ensureCorrectEdit,
@@ -159,7 +159,12 @@ export class WriteFileTool
       params.file_path,
       this.config.getTargetDir(),
     );
-    return `Writing to ${shortenPath(relativePath)}`;
+    const displayPath = formatDisplayPath(
+      relativePath,
+      params.file_path,
+      this.config.getPathShorteningEnabled(),
+    );
+    return `Writing to ${displayPath}`;
   }
 
   /**
@@ -207,7 +212,11 @@ export class WriteFileTool
 
     const confirmationDetails: ToolEditConfirmationDetails = {
       type: 'edit',
-      title: `Confirm Write: ${shortenPath(relativePath)}`,
+      title: `Confirm Write: ${formatDisplayPath(
+        relativePath,
+        params.file_path,
+        this.config.getPathShorteningEnabled(),
+      )}`,
       fileName,
       fileDiff,
       onConfirm: async (outcome: ToolConfirmationOutcome) => {

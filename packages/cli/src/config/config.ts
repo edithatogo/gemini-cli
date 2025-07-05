@@ -53,6 +53,7 @@ interface CliArgs {
   telemetryTarget: string | undefined;
   telemetryOtlpEndpoint: string | undefined;
   telemetryLogPrompts: boolean | undefined;
+  'path-shortening': boolean | undefined;
 }
 
 async function parseArguments(): Promise<CliArgs> {
@@ -127,6 +128,11 @@ async function parseArguments(): Promise<CliArgs> {
       type: 'boolean',
       description: 'Enables checkpointing of file edits',
       default: false,
+    })
+    .option('path-shortening', {
+      type: 'boolean',
+      description: 'Shorten displayed file paths. Use --no-path-shortening to show full paths.',
+      default: true,
     })
     .version(await getCliVersion()) // This will enable the --version flag based on package.json
     .alias('v', 'version')
@@ -245,6 +251,7 @@ export async function loadCliConfig(
     fileDiscoveryService: fileService,
     bugCommand: settings.bugCommand,
     model: argv.model!,
+    shortenPaths: argv['path-shortening'],
     extensionContextFilePaths,
   });
 }

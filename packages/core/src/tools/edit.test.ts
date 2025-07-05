@@ -75,6 +75,7 @@ describe('EditTool', () => {
       getGeminiMdFileCount: () => 0,
       setGeminiMdFileCount: vi.fn(),
       getToolRegistry: () => ({}) as any, // Minimal mock for ToolRegistry
+      getPathShorteningEnabled: () => true,
     } as unknown as Config;
 
     // Reset mocks before each test
@@ -255,7 +256,7 @@ describe('EditTool', () => {
       );
       expect(confirmation).toEqual(
         expect.objectContaining({
-          title: `Confirm Edit: ${testFile}`,
+          title: `Confirm Edit: ${testFile} (${path.join(rootDir, testFile)})`,
           fileName: testFile,
           fileDiff: expect.any(String),
         }),
@@ -306,7 +307,10 @@ describe('EditTool', () => {
       );
       expect(confirmation).toEqual(
         expect.objectContaining({
-          title: `Confirm Edit: ${newFileName}`,
+          title: `Confirm Edit: ${newFileName} (${path.join(
+            rootDir,
+            newFileName,
+          )})`,
           fileName: newFileName,
           fileDiff: expect.any(String),
         }),
@@ -358,7 +362,7 @@ describe('EditTool', () => {
       // expect(mockEnsureCorrectEdit).toHaveBeenCalledWith(originalContent, params, expect.anything()); // Keep this commented for now
       expect(confirmation).toEqual(
         expect.objectContaining({
-          title: `Confirm Edit: ${testFile}`,
+          title: `Confirm Edit: ${testFile} (${path.join(rootDir, testFile)})`,
           fileName: testFile,
         }),
       );
@@ -456,7 +460,9 @@ describe('EditTool', () => {
       expect(result.llmContent).toMatch(/Created new file/);
       expect(fs.existsSync(newFilePath)).toBe(true);
       expect(fs.readFileSync(newFilePath, 'utf8')).toBe(fileContent);
-      expect(result.returnDisplay).toBe(`Created ${newFileName}`);
+      expect(result.returnDisplay).toBe(
+        `Created ${newFileName} (${newFilePath})`,
+      );
     });
 
     it('should return error if old_string is not found in file', async () => {
@@ -618,9 +624,8 @@ describe('EditTool', () => {
         old_string: 'identical_string',
         new_string: 'identical_string',
       };
-      // shortenPath will be called internally, resulting in just the file name
       expect(tool.getDescription(params)).toBe(
-        `No file changes to ${testFileName}`,
+        `No file changes to ${testFileName} (${path.join(rootDir, testFileName)})`,
       );
     });
 
@@ -631,10 +636,11 @@ describe('EditTool', () => {
         old_string: 'this is the old string value',
         new_string: 'this is the new string value',
       };
-      // shortenPath will be called internally, resulting in just the file name
-      // The snippets are truncated at 30 chars + '...'
       expect(tool.getDescription(params)).toBe(
-        `${testFileName}: this is the old string value => this is the new string value`,
+        `${testFileName} (${path.join(
+          rootDir,
+          testFileName,
+        )}): this is the old string value => this is the new string value`,
       );
     });
 
@@ -645,7 +651,9 @@ describe('EditTool', () => {
         old_string: 'old',
         new_string: 'new',
       };
-      expect(tool.getDescription(params)).toBe(`${testFileName}: old => new`);
+      expect(tool.getDescription(params)).toBe(
+        `${testFileName} (${path.join(rootDir, testFileName)}): old => new`,
+      );
     });
 
     it('should truncate long strings in the description', () => {
@@ -658,7 +666,10 @@ describe('EditTool', () => {
           'this is a very long new string that will also be truncated',
       };
       expect(tool.getDescription(params)).toBe(
-        `${testFileName}: this is a very long old string... => this is a very long new string...`,
+        `${testFileName} (${path.join(
+          rootDir,
+          testFileName,
+        )}): this is a very long old string... => this is a very long new string...`,
       );
     });
   });

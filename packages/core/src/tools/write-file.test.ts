@@ -74,6 +74,7 @@ const mockConfigInternal = {
       registerTool: vi.fn(),
       discoverTools: vi.fn(),
     }) as unknown as ToolRegistry,
+  getPathShorteningEnabled: () => true,
 };
 const mockConfig = mockConfigInternal as unknown as Config;
 // --- END MOCKS ---
@@ -351,7 +352,7 @@ describe('WriteFileTool', () => {
       );
       expect(confirmation).toEqual(
         expect.objectContaining({
-          title: `Confirm Write: ${path.basename(filePath)}`,
+          title: `Confirm Write: ${path.basename(filePath)} (${filePath})`,
           fileName: 'confirm_new_file.txt',
           fileDiff: expect.stringContaining(correctedContent),
         }),
@@ -399,7 +400,7 @@ describe('WriteFileTool', () => {
       );
       expect(confirmation).toEqual(
         expect.objectContaining({
-          title: `Confirm Write: ${path.basename(filePath)}`,
+          title: `Confirm Write: ${path.basename(filePath)} (${filePath})`,
           fileName: 'confirm_existing_file.txt',
           fileDiff: expect.stringContaining(correctedProposedContent),
         }),

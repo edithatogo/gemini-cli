@@ -8,7 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import { BaseTool, ToolResult } from './tools.js';
 import { SchemaValidator } from '../utils/schemaValidator.js';
-import { makeRelative, shortenPath } from '../utils/paths.js';
+import { makeRelative, formatDisplayPath } from '../utils/paths.js';
 import { Config } from '../config/config.js';
 
 /**
@@ -181,7 +181,11 @@ export class LSTool extends BaseTool<LSToolParams, ToolResult> {
    */
   getDescription(params: LSToolParams): string {
     const relativePath = makeRelative(params.path, this.rootDirectory);
-    return shortenPath(relativePath);
+    return formatDisplayPath(
+      relativePath,
+      params.path,
+      this.config.getPathShorteningEnabled(),
+    );
   }
 
   // Helper for consistent error formatting
