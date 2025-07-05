@@ -1186,8 +1186,9 @@ export function useTextBuffer({
       else if (key.name === 'end') move('end');
       else if (key.ctrl && key.name === 'e') move('end');
       else if (key.ctrl && key.name === 'w') deleteWordLeft();
+      else if (key.ctrl && key.name === 'backspace') deleteWordLeft();
       else if (
-        (key.meta || key.ctrl) &&
+        key.meta &&
         (key.name === 'backspace' || input === '\x7f')
       )
         deleteWordLeft();

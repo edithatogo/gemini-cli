@@ -774,6 +774,30 @@ describe('useTextBuffer', () => {
       expect(getBufferState(result).text).toBe('');
     });
 
+    it('should handle Ctrl+Backspace as deleteWordLeft', () => {
+      const { result } = renderHook(() =>
+        useTextBuffer({
+          initialText: 'hello world',
+          viewport,
+          isValidPath: () => false,
+        }),
+      );
+      act(() => result.current.move('end'));
+      act(() => result.current.move('down'));
+      act(() => result.current.move('end'));
+      act(() =>
+        result.current.handleInput({
+          name: 'backspace',
+          ctrl: true,
+          meta: false,
+          shift: false,
+          sequence: '\x7f',
+        }),
+      );
+      expect(getBufferState(result).text).toBe('hello ');
+      expect(getBufferState(result).cursor).toEqual([0, 6]);
+    });
+
     it('should handle multiple delete characters in one input', () => {
       const { result } = renderHook(() =>
         useTextBuffer({
