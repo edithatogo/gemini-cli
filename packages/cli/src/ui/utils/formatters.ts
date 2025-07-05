@@ -50,6 +50,8 @@ export const formatDuration = (milliseconds: number): string => {
   }
   if (seconds > 0) {
     parts.push(`${seconds}s`);
+  } else if (totalSeconds >= 60 && totalSeconds < 3600) {
+    parts.push('0s');
   }
 
   // If all parts are zero (e.g., exactly 1 hour), return the largest unit.
