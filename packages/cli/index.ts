@@ -6,11 +6,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import './src/gemini.js';
-import { main } from './src/gemini.js';
+import { start } from './src/index.js';
 
 // --- Global Entry Point ---
-main().catch((error) => {
+start().catch((error) => {
   console.error('An unexpected critical error occurred:');
   if (error instanceof Error) {
     console.error(error.stack);
