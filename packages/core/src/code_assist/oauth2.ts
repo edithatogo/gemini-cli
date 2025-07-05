@@ -122,7 +122,13 @@ async function authWithWeb(client: OAuth2Client): Promise<OauthWebLogin> {
           res.writeHead(HTTP_REDIRECT, { Location: SIGN_IN_FAILURE_URL });
           res.end();
 
-          reject(new Error(`Error during authentication: ${qs.get('error')}`));
+          const error = qs.get('error');
+          const description = qs.get('error_description');
+          let msg = `Error during authentication: ${error}`;
+          if (description && /age verification/i.test(description)) {
+            msg = 'Google account requires age verification';
+          }
+          reject(new Error(msg));
         } else if (qs.get('state') !== state) {
           res.end('State mismatch. Possible CSRF attack');
 
