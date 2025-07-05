@@ -20,14 +20,19 @@ export const Header: React.FC<HeaderProps> = ({
   customAsciiArt,
   terminalWidth,
 }) => {
-  let displayTitle;
+  let displayTitle: string;
   const widthOfLongLogo = getAsciiArtWidth(longAsciiLogo);
+  const widthOfShortLogo = getAsciiArtWidth(shortAsciiLogo);
 
   if (customAsciiArt) {
-    displayTitle = customAsciiArt;
+    const customWidth = getAsciiArtWidth(customAsciiArt);
+    displayTitle = terminalWidth >= customWidth ? customAsciiArt : 'Gemini';
+  } else if (terminalWidth >= widthOfLongLogo) {
+    displayTitle = longAsciiLogo;
+  } else if (terminalWidth >= widthOfShortLogo) {
+    displayTitle = shortAsciiLogo;
   } else {
-    displayTitle =
-      terminalWidth >= widthOfLongLogo ? longAsciiLogo : shortAsciiLogo;
+    displayTitle = 'Gemini';
   }
 
   const artWidth = getAsciiArtWidth(displayTitle);
