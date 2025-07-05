@@ -221,7 +221,15 @@ export const useSlashCommandProcessor = (
               content: `Opening documentation in your browser: ${docsUrl}`,
               timestamp: new Date(),
             });
-            await open(docsUrl);
+            try {
+              await open(docsUrl);
+            } catch {
+              addMessage({
+                type: MessageType.INFO,
+                content: `Please open the following URL in your browser to view the documentation:\n${docsUrl}`,
+                timestamp: new Date(),
+              });
+            }
           }
         },
       },
@@ -345,7 +353,15 @@ export const useSlashCommandProcessor = (
                 content: `No MCP servers configured. Opening documentation in your browser: ${docsUrl}`,
                 timestamp: new Date(),
               });
-              await open(docsUrl);
+              try {
+                await open(docsUrl);
+              } catch {
+                addMessage({
+                  type: MessageType.INFO,
+                  content: `Please open the following URL in your browser to view documentation:\n${docsUrl}`,
+                  timestamp: new Date(),
+                });
+              }
             }
             return;
           }
