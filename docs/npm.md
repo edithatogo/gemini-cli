@@ -6,7 +6,7 @@ This monorepo contains two main packages: `@google/gemini-cli` and `@google/gemi
 
 This is the main package for the Gemini CLI. It is responsible for the user interface, command parsing, and all other user-facing functionality.
 
-When this package is published, it is bundled into a single executable file. This bundle includes all of the package's dependencies, including `@google/gemini-cli-core`. This means that whether a user installs the package with `npm install -g @google/gemini-cli` or runs it directly with `npx @google/gemini-cli`, they are using this single, self-contained executable.
+When this package is published, it is bundled into a single executable file. This bundle includes all of the package's dependencies, including `@google/gemini-cli-core`. This means that whether a user installs the package with `npm install -g @google/gemini-cli`, `pnpm add -g @google-gemini/gemini-cli`, or runs it directly with `npx @google/gemini-cli`, they are using this single, self-contained executable.
 
 ## `@google/gemini-cli-core`
 
@@ -59,6 +59,7 @@ To install the latest nightly build, use the `@nightly` tag:
 
 ```bash
 npm install -g @google/gemini-cli@nightly
+pnpm add -g @google-gemini/gemini-cli@nightly
 ```
 
 The high-level process is:
