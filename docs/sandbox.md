@@ -2,9 +2,20 @@
 
 This document provides a guide to sandboxing in the Gemini CLI, including prerequisites, quickstart, and configuration.
 
+Gemini CLI supports two approaches to sandboxing:
+
+- **macOS Seatbelt** – uses Apple's `sandbox-exec` utility and comes preinstalled on macOS.
+- **Container-based** – runs the CLI inside a Docker or Podman container for full process isolation on any platform.
+
+Container-based sandboxing generally offers stronger isolation and is recommended for everyday use.
+
 ## Prerequisites
 
-Before using sandboxing, you need to install and set up the Gemini CLI:
+Before using sandboxing, ensure the following are installed:
+
+- **Node 18+**
+- **Gemini CLI**
+- **Docker or Podman** (required for container-based sandboxing; Seatbelt is built into macOS)
 
 ```bash
 # install gemini-cli with npm
@@ -44,6 +55,9 @@ Cross-platform sandboxing with complete process isolation.
 ## Quickstart
 
 ```bash
+# Build the sandbox container (required once when using Docker or Podman)
+npm run build:all
+
 # Enable sandboxing with command flag
 gemini -s -p "analyze the code structure"
 
