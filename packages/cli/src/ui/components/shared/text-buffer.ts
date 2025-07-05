@@ -1163,13 +1163,22 @@ export function useTextBuffer({
     }): void => {
       const { sequence: input } = key;
 
-      if (
+      // Windows terminals using IME may send the composed text followed by
+      // a carriage return in a single sequence. Handle this by inserting the
+      // text before processing the newline.  "\\r" is VS Code's Shift+Enter.
+      if (input === '\\\r') {
+        newline();
+      } else if (
         key.name === 'return' ||
         input === '\r' ||
         input === '\n' ||
-        input === '\\\r' // VSCode terminal represents shift + enter this way
-      )
+        input.endsWith('\r') ||
+        input.endsWith('\n')
+      ) {
+        const textBeforeEnter = input.replace(/[\r\n]/g, '');
+        if (textBeforeEnter) insert(textBeforeEnter);
         newline();
+      }
       else if (key.name === 'left' && !key.meta && !key.ctrl) move('left');
       else if (key.ctrl && key.name === 'b') move('left');
       else if (key.name === 'right' && !key.meta && !key.ctrl) move('right');
