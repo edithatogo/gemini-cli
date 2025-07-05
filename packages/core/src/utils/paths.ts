@@ -140,6 +140,19 @@ export function unescapePath(filePath: string): string {
 }
 
 /**
+ * Formats a path for display by optionally shortening the relative path and
+ * appending the absolute path in parentheses so terminals can open it.
+ */
+export function formatDisplayPath(
+  relativePath: string,
+  absolutePath: string,
+  shorten = true,
+): string {
+  const display = shorten ? shortenPath(relativePath) : relativePath;
+  return `${display} (${absolutePath})`;
+}
+
+/**
  * Generates a unique hash for a project based on its root path.
  * @param projectRoot The absolute path to the project's root directory.
  * @returns A SHA256 hash of the project root path.

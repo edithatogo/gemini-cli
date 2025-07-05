@@ -129,6 +129,7 @@ export interface ConfigParameters {
   fileDiscoveryService?: FileDiscoveryService;
   bugCommand?: BugCommandSettings;
   model: string;
+  shortenPaths?: boolean;
   extensionContextFilePaths?: string[];
 }
 
@@ -168,6 +169,7 @@ export class Config {
   private readonly bugCommand: BugCommandSettings | undefined;
   private readonly model: string;
   private readonly extensionContextFilePaths: string[];
+  private readonly shortenPaths: boolean;
   private modelSwitchedDuringSession: boolean = false;
   flashFallbackHandler?: FlashFallbackHandler;
 
@@ -211,6 +213,7 @@ export class Config {
     this.bugCommand = params.bugCommand;
     this.model = params.model;
     this.extensionContextFilePaths = params.extensionContextFilePaths ?? [];
+    this.shortenPaths = params.shortenPaths ?? true;
 
     if (params.contextFileName) {
       setGeminiMdFilename(params.contextFileName);
@@ -424,6 +427,10 @@ export class Config {
 
   getWorkingDir(): string {
     return this.cwd;
+  }
+
+  getPathShorteningEnabled(): boolean {
+    return this.shortenPaths;
   }
 
   getBugCommand(): BugCommandSettings | undefined {

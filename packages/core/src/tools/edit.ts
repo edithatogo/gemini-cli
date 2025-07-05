@@ -16,7 +16,7 @@ import {
   ToolResultDisplay,
 } from './tools.js';
 import { SchemaValidator } from '../utils/schemaValidator.js';
-import { makeRelative, shortenPath } from '../utils/paths.js';
+import { makeRelative, shortenPath, formatDisplayPath } from '../utils/paths.js';
 import { isNodeError } from '../utils/errors.js';
 import { GeminiClient } from '../core/client.js';
 import { Config, ApprovalMode } from '../config/config.js';
@@ -331,9 +331,14 @@ Expectation for required parameters:
       'Proposed',
       DEFAULT_DIFF_OPTIONS,
     );
+    const relativePath = makeRelative(params.file_path, this.rootDirectory);
     const confirmationDetails: ToolEditConfirmationDetails = {
       type: 'edit',
-      title: `Confirm Edit: ${shortenPath(makeRelative(params.file_path, this.rootDirectory))}`,
+      title: `Confirm Edit: ${formatDisplayPath(
+        relativePath,
+        params.file_path,
+        this.config.getPathShorteningEnabled(),
+      )}`,
       fileName,
       fileDiff,
       onConfirm: async (outcome: ToolConfirmationOutcome) => {
@@ -350,8 +355,13 @@ Expectation for required parameters:
       return `Model did not provide valid parameters for edit tool`;
     }
     const relativePath = makeRelative(params.file_path, this.rootDirectory);
+    const displayPath = formatDisplayPath(
+      relativePath,
+      params.file_path,
+      this.config.getPathShorteningEnabled(),
+    );
     if (params.old_string === '') {
-      return `Create ${shortenPath(relativePath)}`;
+      return `Create ${displayPath}`;
     }
 
     const oldStringSnippet =
@@ -362,9 +372,9 @@ Expectation for required parameters:
       (params.new_string.length > 30 ? '...' : '');
 
     if (params.old_string === params.new_string) {
-      return `No file changes to ${shortenPath(relativePath)}`;
+      return `No file changes to ${displayPath}`;
     }
-    return `${shortenPath(relativePath)}: ${oldStringSnippet} => ${newStringSnippet}`;
+    return `${displayPath}: ${oldStringSnippet} => ${newStringSnippet}`;
   }
 
   /**
@@ -408,7 +418,12 @@ Expectation for required parameters:
 
       let displayResult: ToolResultDisplay;
       if (editData.isNewFile) {
-        displayResult = `Created ${shortenPath(makeRelative(params.file_path, this.rootDirectory))}`;
+        const relative = makeRelative(params.file_path, this.rootDirectory);
+        displayResult = `Created ${formatDisplayPath(
+          relative,
+          params.file_path,
+          this.config.getPathShorteningEnabled(),
+        )}`;
       } else {
         // Generate diff for display, even though core logic doesn't technically need it
         // The CLI wrapper will use this part of the ToolResult
