@@ -650,6 +650,42 @@ describe('discoverMcpTools', () => {
       clientInstances[clientInstances.length - 1]?.value;
     expect(lastClientInstance?.onerror).toEqual(expect.any(Function));
   });
+
+  it('should suppress MCP stderr logs by default', async () => {
+    const serverConfig: MCPServerConfig = { command: './mcp-stdio' };
+    mockConfig.getMcpServers.mockReturnValue({ stdio: serverConfig });
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+    await discoverMcpTools(
+      mockConfig.getMcpServers() ?? {},
+      mockConfig.getMcpServerCommand(),
+      mockToolRegistry as any,
+    );
+
+    const stderrCallback = mockGlobalStdioStderrOn.mock.calls[0][1];
+    debugSpy.mockClear();
+    stderrCallback(Buffer.from('oops'));
+    expect(debugSpy).not.toHaveBeenCalled();
+  });
+
+  it('should log MCP stderr when DEBUG_SHOW_MCP_LOGS is true', async () => {
+    process.env.DEBUG_SHOW_MCP_LOGS = '1';
+    const serverConfig: MCPServerConfig = { command: './mcp-stdio' };
+    mockConfig.getMcpServers.mockReturnValue({ stdio: serverConfig });
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+    await discoverMcpTools(
+      mockConfig.getMcpServers() ?? {},
+      mockConfig.getMcpServerCommand(),
+      mockToolRegistry as any,
+    );
+
+    const stderrCallback = mockGlobalStdioStderrOn.mock.calls[0][1];
+    debugSpy.mockClear();
+    stderrCallback(Buffer.from('oops'));
+    expect(debugSpy).toHaveBeenCalled();
+    delete process.env.DEBUG_SHOW_MCP_LOGS;
+  });
 });
 
 describe('sanitizeParameters', () => {
