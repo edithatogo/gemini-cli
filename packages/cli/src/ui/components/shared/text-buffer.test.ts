@@ -913,6 +913,23 @@ describe('useTextBuffer', () => {
       expect(getBufferState(result).lines).toEqual(['', '']);
     });
 
+    it('should preserve text before Enter for IME input', () => {
+      const { result } = renderHook(() =>
+        useTextBuffer({ viewport, isValidPath: () => false }),
+      );
+      act(() =>
+        result.current.handleInput({
+          name: 'return',
+          ctrl: false,
+          meta: false,
+          shift: false,
+          paste: false,
+          sequence: '가\r',
+        }),
+      );
+      expect(getBufferState(result).lines).toEqual(['가', '']);
+    });
+
     it('should correctly handle repeated pasting of long text', () => {
       const longText = `not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
 
