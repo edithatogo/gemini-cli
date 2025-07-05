@@ -171,33 +171,6 @@ export async function loadCliConfig(
   const argv = await parseArguments();
   const debugMode = argv.debug || false;
 
-  // Set the context filename in the server's memoryTool module BEFORE loading memory
-  // TODO(b/343434939): This is a bit of a hack. The contextFileName should ideally be passed
-  // directly to the Config constructor in core, and have core handle setGeminiMdFilename.
-  // However, loadHierarchicalGeminiMemory is called *before* createServerConfig.
-  if (settings.contextFileName) {
-    setServerGeminiMdFilename(settings.contextFileName);
-  } else {
-    // Reset to default if not provided in settings.
-    setServerGeminiMdFilename(getCurrentGeminiMdFilename());
-  }
-
-  const extensionContextFilePaths = extensions.flatMap((e) => e.contextFiles);
-
-  const fileService = new FileDiscoveryService(process.cwd());
-  // Call the (now wrapper) loadHierarchicalGeminiMemory which calls the server's version
-  const { memoryContent, fileCount } = await loadHierarchicalGeminiMemory(
-    process.cwd(),
-    debugMode,
-    fileService,
-    extensionContextFilePaths,
-  );
-
-  const mcpServers = mergeMcpServers(settings, extensions);
-  const excludeTools = mergeExcludeTools(settings, extensions);
-
-  const sandboxConfig = await loadSandboxConfig(settings, argv);
-
   return new Config({
     sessionId,
     embeddingModel: DEFAULT_GEMINI_EMBEDDING_MODEL,
@@ -217,6 +190,7 @@ export async function loadCliConfig(
     approvalMode: argv.yolo || false ? ApprovalMode.YOLO : ApprovalMode.DEFAULT,
     showMemoryUsage:
       argv.show_memory_usage || settings.showMemoryUsage || false,
+    contextFileName: settings.contextFileName,
     accessibility: settings.accessibility,
     telemetry: {
       enabled: argv.telemetry ?? settings.telemetry?.enabled,
