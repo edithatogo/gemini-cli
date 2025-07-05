@@ -10,7 +10,7 @@ There are several ways to run Gemini CLI. The option you choose depends on how y
 
 ### 1. Standard installation (Recommended for typical users)
 
-This is the recommended way for end-users to install Gemini CLI. It involves downloading the Gemini CLI package from the NPM registry.
+This is the recommended way for end-users to install Gemini CLI. It involves downloading the Gemini CLI package from the NPM registry or installing via Homebrew.
 
 - **Global install:**
 
@@ -19,6 +19,13 @@ This is the recommended way for end-users to install Gemini CLI. It involves dow
   npm install -g @google/gemini-cli
 
   # Now you can run the CLI from anywhere
+  gemini
+  ```
+
+- **Homebrew install:**
+
+  ```bash
+  brew install google-gemini/gemini/gemini-cli
   gemini
   ```
 

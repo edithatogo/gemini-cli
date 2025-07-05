@@ -26,12 +26,21 @@ With the Gemini CLI you can:
    npx https://github.com/google-gemini/gemini-cli
    ```
 
-   Or install it with:
+   Or install it globally with npm (see Homebrew below for an alternative):
 
    ```bash
    npm install -g @google/gemini-cli
    gemini
    ```
+
+### Install via Homebrew
+
+For macOS or Linux users who prefer [Homebrew](https://brew.sh/), run:
+
+```bash
+brew install google-gemini/gemini/gemini-cli
+gemini
+```
 
 3. **Pick a color theme**
 4. **Authenticate:** When prompted, sign in with your personal Google account. This will grant you up to 60 model requests per minute and 1,000 model requests per day using Gemini.
