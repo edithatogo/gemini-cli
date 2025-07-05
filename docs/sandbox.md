@@ -43,15 +43,32 @@ Cross-platform sandboxing with complete process isolation.
 
 ## Quickstart
 
-```bash
-# Enable sandboxing with command flag
-gemini -s -p "analyze the code structure"
+To get started with sandboxing, you can use command-line flags, environment variables, or your `settings.json` file.
 
-# Use environment variable
+### Using Command-Line Flags
+
+The easiest way to enable sandboxing for a single command is with the `-s` or `--sandbox` flag.
+
+```bash
+# Enable sandboxing for a single command
+gemini -s -p "analyze the code structure"
+```
+
+### Using Environment Variables
+
+For a more persistent setting, you can use the `GEMINI_SANDBOX` environment variable.
+
+```bash
+# Enable sandboxing for the current session
 export GEMINI_SANDBOX=true
 gemini -p "run the test suite"
+```
 
-# Configure in settings.json
+### Using `settings.json`
+
+For a permanent setting, you can add `"sandbox": true` to your `settings.json` file.
+
+```json
 {
   "sandbox": "docker"
 }
@@ -74,6 +91,39 @@ Built-in profiles (set via `SEATBELT_PROFILE` env var):
 - `permissive-proxied`: Write restrictions, network via proxy
 - `restrictive-open`: Strict restrictions, network allowed
 - `restrictive-closed`: Maximum restrictions
+
+To use a proxied profile, you must also set the `GEMINI_SANDBOX_PROXY_COMMAND` environment variable to a command that starts a proxy server. See the "Proxied Networking" section for more details.
+
+### Custom macOS Seatbelt Profiles
+
+You can create your own custom Seatbelt profiles by creating a `.sb` file in the `.gemini` directory in your project's root. For example, to create a profile named `my-profile`, you would create a file named `.gemini/sandbox-macos-my-profile.sb`. You can then use this profile by setting `SEATBELT_PROFILE=my-profile`.
+
+### Container-based Sandboxing
+
+#### Custom Dockerfiles
+
+To customize the container-based sandbox, you can create a `.gemini/sandbox.Dockerfile` file in your project's root directory. This file will be used to build the sandbox image. For example, to install a new tool in the sandbox, you could add the following to your Dockerfile:
+
+```dockerfile
+FROM gcr.io/gemini-cli/sandbox:latest
+RUN apt-get update && apt-get install -y <my-tool>
+```
+
+After creating or modifying the Dockerfile, you must rebuild the sandbox image by running `gemini` with the `BUILD_SANDBOX=1` environment variable.
+
+#### Proxied Networking
+
+All sandboxing methods support proxied networking. To use a proxy, you must set the `GEMINI_SANDBOX_PROXY_COMMAND` environment variable to a command that starts a proxy server that listens on `:::8877`. The proxy will be started and stopped automatically with the sandbox.
+
+See `scripts/example-proxy.js` for an example of a minimal proxy.
+
+#### Mounting Additional Directories
+
+By default, the container-based sandbox mounts the project directory and the system temp directory. You can mount additional directories by setting the `SANDBOX_MOUNTS` environment variable. This variable should be a space-separated list of mount points in the format `<host-path>:<container-path>`.
+
+```bash
+export SANDBOX_MOUNTS="/path/to/my/data:/data"
+```
 
 ## Linux UID/GID handling
 
