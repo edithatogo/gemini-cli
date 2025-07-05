@@ -1,6 +1,6 @@
 ## Uninstalling the CLI
 
-Your uninstall method depends on how you ran the CLI. Follow the instructions for either npx or a global npm installation.
+Your uninstall method depends on how you ran the CLI. Follow the instructions for npx, a global npm installation, or Homebrew.
 
 ### Method 1: Using npx
 
@@ -37,6 +37,14 @@ If you installed the CLI globally (e.g., `npm install -g @google/gemini-cli`), u
 
 ```bash
 npm uninstall -g @google/gemini-cli
+```
+
+### Method 3: Homebrew
+
+If you installed the CLI using Homebrew, remove it with:
+
+```bash
+brew uninstall gemini-cli
 ```
 
 This command completely removes the package from your system.

@@ -9,6 +9,8 @@ Before using sandboxing, you need to install and set up the Gemini CLI:
 ```bash
 # install gemini-cli with npm
 npm install -g @google/gemini-cli
+# or use Homebrew
+brew install google-gemini/gemini/gemini-cli
 
 # Verify installation
 gemini --version
