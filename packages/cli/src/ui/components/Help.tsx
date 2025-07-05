@@ -119,7 +119,7 @@ export const Help: React.FC<Help> = ({ commands }) => (
       <Text bold color={Colors.AccentPurple}>
         Shift+Tab
       </Text>{' '}
-      - Toggle auto-accepting edits
+      - Toggle auto-apply edits mode
     </Text>
     <Text color={Colors.Foreground}>
       <Text bold color={Colors.AccentPurple}>
