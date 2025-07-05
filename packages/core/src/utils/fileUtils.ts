@@ -106,9 +106,16 @@ export function detectFileType(
   if (ext === '.ts') {
     return 'text';
   }
+  // Treat SVG files as text to avoid image handling
+  if (ext === '.svg') {
+    return 'text';
+  }
 
   const lookedUpMimeType = mime.lookup(filePath); // Returns false if not found, or the mime type string
   if (lookedUpMimeType) {
+    if (lookedUpMimeType === 'image/svg+xml') {
+      return 'text';
+    }
     if (lookedUpMimeType.startsWith('image/')) {
       return 'image';
     }

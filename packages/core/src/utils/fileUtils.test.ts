@@ -42,6 +42,7 @@ describe('fileUtils', () => {
   let testImageFilePath: string;
   let testPdfFilePath: string;
   let testBinaryFilePath: string;
+  let testSvgFilePath: string;
   let nonExistentFilePath: string;
   let directoryPath: string;
 
@@ -57,6 +58,7 @@ describe('fileUtils', () => {
     testImageFilePath = path.join(tempRootDir, 'image.png');
     testPdfFilePath = path.join(tempRootDir, 'document.pdf');
     testBinaryFilePath = path.join(tempRootDir, 'app.exe');
+    testSvgFilePath = path.join(tempRootDir, 'diagram.svg');
     nonExistentFilePath = path.join(tempRootDir, 'notfound.txt');
     directoryPath = path.join(tempRootDir, 'subdir');
 
@@ -226,6 +228,11 @@ describe('fileUtils', () => {
       expect(detectFileType('movie.mp4')).toBe('video');
     });
 
+    it('should treat svg files as text', () => {
+      mockMimeLookup.mockReturnValueOnce('image/svg+xml');
+      expect(detectFileType('diagram.svg')).toBe('text');
+    });
+
     it('should detect known binary extensions as binary (e.g. .zip)', () => {
       mockMimeLookup.mockReturnValueOnce('application/zip');
       expect(detectFileType('archive.zip')).toBe('binary');
@@ -332,6 +339,20 @@ describe('fileUtils', () => {
         (result.llmContent as { inlineData: { data: string } }).inlineData.data,
       ).toBe(fakePngData.toString('base64'));
       expect(result.returnDisplay).toContain('Read image file: image.png');
+    });
+
+    it('should read an svg file as text', async () => {
+      const svgContent = '<svg></svg>';
+      actualNodeFs.writeFileSync(testSvgFilePath, svgContent);
+      mockMimeLookup.mockReturnValue('image/svg+xml');
+
+      const result = await processSingleFileContent(
+        testSvgFilePath,
+        tempRootDir,
+      );
+
+      expect(result.llmContent).toBe(svgContent);
+      expect(result.returnDisplay).toBe('');
     });
 
     it('should process a PDF file', async () => {
