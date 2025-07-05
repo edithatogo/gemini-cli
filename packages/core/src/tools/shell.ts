@@ -114,10 +114,10 @@ Process Group PGID: Process group started or \`(none)\``,
    * @param command The shell command string to validate
    * @returns True if the command is allowed to execute, false otherwise
    */
-  isCommandAllowed(command: string): boolean {
+  isCommandAllowed(command: string): [boolean, string] {
     // 0. Disallow command substitution
     if (command.includes('$(') || command.includes('`')) {
-      return false;
+      return [false, 'Command substitution is not allowed.'];
     }
 
     const SHELL_TOOL_NAMES = [ShellTool.name, ShellTool.Name];
@@ -157,7 +157,10 @@ Process Group PGID: Process group started or \`(none)\``,
 
     // 1. Check if the shell tool is globally disabled.
     if (SHELL_TOOL_NAMES.some((name) => excludeTools.includes(name))) {
-      return false;
+      return [
+        false,
+        'The shell tool is disabled in the current configuration.',
+      ];
     }
 
     const blockedCommands = new Set(extractCommands(excludeTools));
@@ -176,7 +179,7 @@ Process Group PGID: Process group started or \`(none)\``,
         isPrefixedBy(cmd, blocked),
       );
       if (isBlocked) {
-        return false;
+        return [false, `Command "${cmd}" is on the blocklist.`];
       }
 
       // 3. If in strict allow-list mode, check if the command is permitted.
@@ -187,18 +190,19 @@ Process Group PGID: Process group started or \`(none)\``,
           isPrefixedBy(cmd, allowed),
         );
         if (!isAllowed) {
-          return false;
+          return [false, `Command "${cmd}" is not on the strict allowlist.`];
         }
       }
     }
 
     // 4. If all checks pass, the command is allowed.
-    return true;
+    return [true, ''];
   }
 
   validateToolParams(params: ShellToolParams): string | null {
-    if (!this.isCommandAllowed(params.command)) {
-      return `Command is not allowed: ${params.command}`;
+    const [isAllowed, reason] = this.isCommandAllowed(params.command);
+    if (!isAllowed) {
+      return `Command is not allowed: ${reason}`;
     }
     if (
       !SchemaValidator.validate(
