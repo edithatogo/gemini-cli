@@ -326,13 +326,35 @@ describe('ShellTool', () => {
     expect(isAllowed).toBe(true);
   });
 
+  it('should not wait for a command to complete if it starts with nohup', async () => {
+    const config = {
+      getCoreTools: () => undefined,
+      getExcludeTools: () => undefined,
+      getTargetDir: () => '.',
+    } as unknown as Config;
+    const shellTool = new ShellTool(config);
+    const result = await shellTool.execute(
+      { command: 'nohup sleep 1' },
+      new AbortController().signal,
+    );
+    expect(result.llmContent).toBe(
+      'Command "nohup sleep 1" was started in the background with nohup.',
+    );
+    expect(result.returnDisplay).toBe(
+      'Started command "nohup sleep 1" in the background.',
+    );
+  });
+
   it('should not allow a command that is chained with a double pipe', async () => {
     const config = {
       getCoreTools: () => ['run_shell_command(gh issue list)'],
       getExcludeTools: () => [],
     } as unknown as Config;
     const shellTool = new ShellTool(config);
-    const isAllowed = shellTool.isCommandAllowed('gh issue list || rm -rf /');
+    const [isAllowed, reason] = shellTool.isCommandAllowed(
+      'gh issue list || rm -rf /',
+    );
     expect(isAllowed).toBe(false);
+    expect(reason).toBe('Command "rm -rf /" is not on the strict allowlist.');
   });
 });

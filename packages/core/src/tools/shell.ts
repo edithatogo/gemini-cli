@@ -277,6 +277,8 @@ Process Group PGID: Process group started or \`(none)\``,
       };
     }
 
+    const isNohup = params.command.trim().startsWith('nohup');
+
     const isWindows = os.platform() === 'win32';
     const tempFileName = `shell_pgrep_${crypto
       .randomBytes(6)
@@ -305,6 +307,14 @@ Process Group PGID: Process group started or \`(none)\``,
           detached: true, // ensure subprocess starts its own process group (esp. in Linux)
           cwd: path.resolve(this.config.getTargetDir(), params.directory || ''),
         });
+
+    if (isNohup) {
+      shell.unref();
+      return {
+        llmContent: `Command "${params.command}" was started in the background with nohup.`,
+        returnDisplay: `Started command "${params.command}" in the background.`,
+      };
+    }
 
     let exited = false;
     let stdout = '';
