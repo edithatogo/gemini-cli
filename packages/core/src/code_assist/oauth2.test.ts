@@ -169,4 +169,71 @@ describe('oauth2', () => {
     // Verify the getCachedGoogleAccountId function works
     expect(getCachedGoogleAccountId()).toBe('test-google-account-id-123');
   });
+
+  it('shows age verification message on oauth failure', async () => {
+    const mockAuthUrl = 'https://example.com/auth';
+    const mockState = 'test-state';
+
+    const mockGenerateAuthUrl = vi.fn().mockReturnValue(mockAuthUrl);
+    const mockOAuth2Client = {
+      generateAuthUrl: mockGenerateAuthUrl,
+      on: vi.fn(),
+    } as unknown as OAuth2Client;
+    vi.mocked(OAuth2Client).mockImplementation(() => mockOAuth2Client);
+
+    vi.spyOn(crypto, 'randomBytes').mockReturnValue(mockState as never);
+    vi.mocked(open).mockImplementation(async () => ({} as never));
+
+    let requestCallback!: http.RequestListener<
+      typeof http.IncomingMessage,
+      typeof http.ServerResponse
+    >;
+    let serverListeningCallback: (value: unknown) => void;
+    const serverListeningPromise = new Promise(
+      (resolve) => (serverListeningCallback = resolve),
+    );
+
+    let capturedPort = 0;
+    const mockHttpServer = {
+      listen: vi.fn((port: number, callback?: () => void) => {
+        capturedPort = port;
+        if (callback) {
+          callback();
+        }
+        serverListeningCallback(undefined);
+      }),
+      close: vi.fn((callback?: () => void) => {
+        if (callback) {
+          callback();
+        }
+      }),
+      on: vi.fn(),
+      address: () => ({ port: capturedPort }),
+    };
+    vi.mocked(http.createServer).mockImplementation((cb) => {
+      requestCallback = cb as http.RequestListener<
+        typeof http.IncomingMessage,
+        typeof http.ServerResponse
+      >;
+      return mockHttpServer as unknown as http.Server;
+    });
+
+    const clientPromise = getOauthClient();
+
+    await serverListeningPromise;
+
+    const mockReq = {
+      url: `/oauth2callback?error=access_denied&error_description=Age+verification+required&state=${mockState}`,
+    } as http.IncomingMessage;
+    const mockRes = {
+      writeHead: vi.fn(),
+      end: vi.fn(),
+    } as unknown as http.ServerResponse;
+
+    await requestCallback(mockReq, mockRes);
+    await expect(clientPromise).rejects.toThrow(
+      'Google account requires age verification',
+    );
+    expect(open).toHaveBeenCalledWith(mockAuthUrl);
+  });
 });
