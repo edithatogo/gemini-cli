@@ -335,4 +335,32 @@ describe('ShellTool', () => {
     const isAllowed = shellTool.isCommandAllowed('gh issue list || rm -rf /');
     expect(isAllowed).toBe(false);
   });
+
+  describe('validateToolParams', () => {
+    it('returns reason for command substitution', () => {
+      const config = {
+        getCoreTools: () => ['run_shell_command(echo)'],
+        getExcludeTools: () => [],
+      } as unknown as Config;
+      const shellTool = new ShellTool(config);
+      const params = { command: 'echo $(rm -rf /)' };
+      const result = shellTool.validateToolParams(params);
+      expect(result).toBe(
+        'Command is not allowed: echo $(rm -rf /) (command substitution not permitted)',
+      );
+    });
+
+    it('returns reason when command not on allowlist', () => {
+      const config = {
+        getCoreTools: () => ['run_shell_command(ls)'],
+        getExcludeTools: () => [],
+      } as unknown as Config;
+      const shellTool = new ShellTool(config);
+      const params = { command: 'rm -rf /' };
+      const result = shellTool.validateToolParams(params);
+      expect(result).toBe(
+        'Command is not allowed: rm -rf / (command not on allowlist)',
+      );
+    });
+  });
 });
