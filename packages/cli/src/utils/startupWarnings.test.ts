@@ -4,72 +4,144 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getStartupWarnings } from './startupWarnings.js';
-import * as fs from 'fs/promises';
-import { getErrorMessage } from '@google/gemini-cli-core';
+import fs from 'fs/promises';
+import os from 'os';
+import { join as pathJoin } from 'node:path';
 
-vi.mock('fs/promises');
-vi.mock('@google/gemini-cli-core', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    getErrorMessage: vi.fn(),
-  };
-});
+// Mock process.version
+const originalProcessVersion = process.version;
 
-describe.skip('startupWarnings', () => {
-  beforeEach(() => {
-    vi.resetAllMocks();
+// Helper function to create a temporary warnings file
+async function createTemporaryWarningsFile(content: string): Promise<string> {
+  const warningsFilePath = pathJoin(os.tmpdir(), 'gemini-cli-warnings.txt');
+  await fs.writeFile(warningsFilePath, content);
+  return warningsFilePath;
+}
+
+// Helper function to delete the temporary warnings file
+async function deleteTemporaryWarningsFile(): Promise<void> {
+  const warningsFilePath = pathJoin(os.tmpdir(), 'gemini-cli-warnings.txt');
+  try {
+    await fs.unlink(warningsFilePath);
+  } catch (error) {
+    // Ignore errors if the file doesn't exist
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return;
+    }
+    throw error;
+  }
+}
+
+describe('getStartupWarnings', () => {
+  beforeEach(async () => {
+    // Reset process.version before each test
+    Object.defineProperty(process, 'version', {
+      value: originalProcessVersion,
+      writable: true,
+    });
+    // Ensure no temporary file exists from previous runs
+    await deleteTemporaryWarningsFile();
   });
 
-  it('should return warnings from the file and delete it', async () => {
-    const mockWarnings = 'Warning 1\nWarning 2';
-    vi.spyOn(fs, 'access').mockResolvedValue();
-    vi.spyOn(fs, 'readFile').mockResolvedValue(mockWarnings);
-    vi.spyOn(fs, 'unlink').mockResolvedValue();
-
-    const warnings = await getStartupWarnings();
-
-    expect(fs.access).toHaveBeenCalled();
-    expect(fs.readFile).toHaveBeenCalled();
-    expect(fs.unlink).toHaveBeenCalled();
-    expect(warnings).toEqual(['Warning 1', 'Warning 2']);
+  afterEach(async () => {
+    // Clean up the temporary file after each test
+    await deleteTemporaryWarningsFile();
+    // Restore original process.version
+    Object.defineProperty(process, 'version', {
+      value: originalProcessVersion,
+      writable: true,
+    });
   });
 
-  it('should return an empty array if the file does not exist', async () => {
-    const error = new Error('File not found');
-    (error as Error & { code: string }).code = 'ENOENT';
-    vi.spyOn(fs, 'access').mockRejectedValue(error);
-
+  it('should return a warning for Node.js version less than 20', async () => {
+    Object.defineProperty(process, 'version', {
+      value: 'v18.0.0',
+      writable: true,
+    });
     const warnings = await getStartupWarnings();
+    expect(warnings).toContain(
+      'Warning: You are using Node.js v18.0.0. Please upgrade to Node.js 20 or higher for optimal performance and security.',
+    );
+  });
 
+  it('should not return a Node.js version warning for Node.js version 20', async () => {
+    Object.defineProperty(process, 'version', {
+      value: 'v20.0.0',
+      writable: true,
+    });
+    const warnings = await getStartupWarnings();
+    expect(
+      warnings.some((w) => w.startsWith('Warning: You are using Node.js')),
+    ).toBe(false);
+  });
+
+  it('should not return a Node.js version warning for Node.js version greater than 20', async () => {
+    Object.defineProperty(process, 'version', {
+      value: 'v21.0.0',
+      writable: true,
+    });
+    const warnings = await getStartupWarnings();
+    expect(
+      warnings.some((w) => w.startsWith('Warning: You are using Node.js')),
+    ).toBe(false);
+  });
+
+  it('should return warnings from the temporary file', async () => {
+    await createTemporaryWarningsFile('Temporary warning 1\nTemporary warning 2');
+    // Keep Node version compliant to isolate this test
+    Object.defineProperty(process, 'version', {
+      value: 'v20.0.0',
+      writable: true,
+    });
+    const warnings = await getStartupWarnings();
+    expect(warnings).toContain('Temporary warning 1');
+    expect(warnings).toContain('Temporary warning 2');
+  });
+
+  it('should return both Node version warning and temporary file warnings', async () => {
+    Object.defineProperty(process, 'version', {
+      value: 'v19.5.0',
+      writable: true,
+    });
+    await createTemporaryWarningsFile('Temporary file warning');
+    const warnings = await getStartupWarnings();
+    expect(warnings).toContain(
+      'Warning: You are using Node.js v19.5.0. Please upgrade to Node.js 20 or higher for optimal performance and security.',
+    );
+    expect(warnings).toContain('Temporary file warning');
+  });
+
+  it('should return an empty array when no warnings are present and Node version is compliant', async () => {
+    Object.defineProperty(process, 'version', {
+      value: 'v20.0.0',
+      writable: true,
+    });
+    const warnings = await getStartupWarnings();
     expect(warnings).toEqual([]);
   });
 
-  it('should return an error message if reading the file fails', async () => {
-    const error = new Error('Permission denied');
-    vi.spyOn(fs, 'access').mockRejectedValue(error);
-    vi.mocked(getErrorMessage).mockReturnValue('Permission denied');
+  it('should handle errors when deleting the temporary warnings file', async () => {
+    await createTemporaryWarningsFile('A warning');
+    Object.defineProperty(process, 'version', {
+      value: 'v20.0.0', // Compliant Node version
+      writable: true,
+    });
+
+    // Mock fs.unlink to throw an error that is not ENOENT
+    const originalUnlink = fs.unlink;
+    (fs.unlink as jest.Mock) = jest.fn().mockImplementation(async () => {
+      const error = new Error('Test unlink error');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (error as any).code = 'EACCES'; // Simulate a permission error
+      throw error;
+    });
 
     const warnings = await getStartupWarnings();
+    expect(warnings).toContain('A warning');
+    expect(warnings).toContain('Warning: Could not delete temporary warnings file.');
 
-    expect(warnings).toEqual([
-      'Error checking/reading warnings file: Permission denied',
-    ]);
-  });
-
-  it('should return a warning if deleting the file fails', async () => {
-    const mockWarnings = 'Warning 1';
-    vi.spyOn(fs, 'access').mockResolvedValue();
-    vi.spyOn(fs, 'readFile').mockResolvedValue(mockWarnings);
-    vi.spyOn(fs, 'unlink').mockRejectedValue(new Error('Permission denied'));
-
-    const warnings = await getStartupWarnings();
-
-    expect(warnings).toEqual([
-      'Warning 1',
-      'Warning: Could not delete temporary warnings file.',
-    ]);
+    // Restore original fs.unlink
+    fs.unlink = originalUnlink;
   });
 });
