@@ -90,6 +90,10 @@ export const useGeminiStream = (
   getPreferredEditor: () => EditorType | undefined,
   onAuthError: () => void,
   performMemoryRefresh: () => Promise<void>,
+  updateSettingsCallback?: ( // Add this new parameter
+    key: string,
+    value: Record<string, true | string[]> | undefined,
+  ) => void,
 ) => {
   const [initError, setInitError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -129,6 +133,7 @@ export const useGeminiStream = (
       config,
       setPendingHistoryItem,
       getPreferredEditor,
+      updateSettingsCallback, // Pass it here
     );
 
   const pendingToolCallGroupDisplay = useMemo(

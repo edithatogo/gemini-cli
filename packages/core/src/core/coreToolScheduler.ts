@@ -219,6 +219,10 @@ interface CoreToolSchedulerOptions {
   approvalMode?: ApprovalMode;
   getPreferredEditor: () => EditorType | undefined;
   config: Config;
+  updateSettingsCallback: (
+    key: string,
+    value: Record<string, true | string[]> | undefined,
+  ) => void; // Callback to update settings
 }
 
 export class CoreToolScheduler {
@@ -230,11 +234,16 @@ export class CoreToolScheduler {
   private approvalMode: ApprovalMode;
   private getPreferredEditor: () => EditorType | undefined;
   private config: Config;
+  private updateSettingsCallback: (
+    key: string,
+    value: Record<string, true | string[]> | undefined,
+  ) => void;
 
   constructor(options: CoreToolSchedulerOptions) {
     this.config = options.config;
     this.toolRegistry = options.toolRegistry;
     this.outputUpdateHandler = options.outputUpdateHandler;
+    this.updateSettingsCallback = options.updateSettingsCallback;
     this.onAllToolCallsComplete = options.onAllToolCallsComplete;
     this.onToolCallsUpdate = options.onToolCallsUpdate;
     this.approvalMode = options.approvalMode ?? ApprovalMode.DEFAULT;

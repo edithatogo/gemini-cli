@@ -211,6 +211,7 @@ export interface ToolExecuteConfirmationDetails {
   onConfirm: (outcome: ToolConfirmationOutcome) => Promise<void>;
   command: string;
   rootCommand: string;
+  subCommand?: string;
 }
 
 export interface ToolMcpConfirmationDetails {
@@ -241,6 +242,7 @@ export enum ToolConfirmationOutcome {
   ProceedAlways = 'proceed_always',
   ProceedAlwaysServer = 'proceed_always_server',
   ProceedAlwaysTool = 'proceed_always_tool',
+  ProceedAlwaysRoot = 'proceed_always_root', // New outcome for allowing root command
   ModifyWithEditor = 'modify_with_editor',
   Cancel = 'cancel',
 }

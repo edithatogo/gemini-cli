@@ -336,3 +336,128 @@ describe('ShellTool', () => {
     expect(isAllowed).toBe(false);
   });
 });
+
+describe('ShellTool.shouldConfirmExecute', () => {
+  const mockConfig = (alwaysAllowCommands?: Record<string, true | string[]>) =>
+    ({
+      getAlwaysAllowCommands: () => alwaysAllowCommands,
+      // Mock other necessary Config methods if ShellTool uses them directly
+      // For now, we assume only getAlwaysAllowCommands is needed for this test
+      getCoreTools: () => undefined, // Add this
+      getExcludeTools: () => undefined, // Add this
+      getTargetDir: () => '.', // Add this
+    }) as unknown as Config; // Cast to unknown first to satisfy stricter type checks
+
+  const shellToolWithRules = (
+    alwaysAllowCommands?: Record<string, true | string[]>,
+  ) => new ShellTool(mockConfig(alwaysAllowCommands));
+
+  const defaultAbortSignal = new AbortController().signal;
+
+  it('should return false (no confirmation) if root command is true in alwaysAllowCommands', async () => {
+    const tool = shellToolWithRules({ git: true });
+    const result = await tool.shouldConfirmExecute(
+      { command: 'git status' },
+      defaultAbortSignal,
+    );
+    expect(result).toBe(false);
+  });
+
+  it('should return false (no confirmation) if subcommand is in alwaysAllowCommands array', async () => {
+    const tool = shellToolWithRules({ git: ['status', 'log'] });
+    const result = await tool.shouldConfirmExecute(
+      { command: 'git status --short' },
+      defaultAbortSignal,
+    );
+    expect(result).toBe(false);
+  });
+
+  it('should request confirmation if subcommand is NOT in alwaysAllowCommands array', async () => {
+    const tool = shellToolWithRules({ git: ['status', 'log'] });
+    const result = await tool.shouldConfirmExecute(
+      { command: 'git commit -m "test"' },
+      defaultAbortSignal,
+    );
+    expect(result).not.toBe(false);
+    if (result !== false) {
+      expect(result.type).toBe('exec');
+      expect(result.rootCommand).toBe('git');
+      expect(result.subCommand).toBe('commit');
+    }
+  });
+
+  it('should request confirmation if root command is not in alwaysAllowCommands', async () => {
+    const tool = shellToolWithRules({ npm: ['install'] });
+    const result = await tool.shouldConfirmExecute(
+      { command: 'git status' },
+      defaultAbortSignal,
+    );
+    expect(result).not.toBe(false);
+    if (result !== false) {
+      expect(result.type).toBe('exec');
+      expect(result.rootCommand).toBe('git');
+      expect(result.subCommand).toBe('status');
+    }
+  });
+
+  it('should request confirmation if alwaysAllowCommands is empty', async () => {
+    const tool = shellToolWithRules({});
+    const result = await tool.shouldConfirmExecute(
+      { command: 'git status' },
+      defaultAbortSignal,
+    );
+    expect(result).not.toBe(false);
+  });
+
+  it('should request confirmation if alwaysAllowCommands is undefined', async () => {
+    const tool = shellToolWithRules(undefined);
+    const result = await tool.shouldConfirmExecute(
+      { command: 'git status' },
+      defaultAbortSignal,
+    );
+    expect(result).not.toBe(false);
+  });
+
+  it('should use legacy whitelist if command not covered by alwaysAllowCommands', async () => {
+    const tool = shellToolWithRules({ npm: ['install'] });
+    // @ts-expect-error - private property
+    tool.whitelist.add('git'); // Simulate legacy whitelist entry
+    const result = await tool.shouldConfirmExecute(
+      { command: 'git status' },
+      defaultAbortSignal,
+    );
+    expect(result).toBe(false);
+  });
+
+  it('should request confirmation for command without subcommands if not in alwaysAllowCommands', async () => {
+    const tool = shellToolWithRules({});
+    const result = await tool.shouldConfirmExecute(
+      { command: 'ls' },
+      defaultAbortSignal,
+    );
+    expect(result).not.toBe(false);
+    if (result !== false) {
+      expect(result.type).toBe('exec');
+      expect(result.rootCommand).toBe('ls');
+      expect(result.subCommand).toBeUndefined();
+    }
+  });
+
+  it('should return false for command without subcommands if root is true in alwaysAllowCommands', async () => {
+    const tool = shellToolWithRules({ ls: true });
+    const result = await tool.shouldConfirmExecute(
+      { command: 'ls -la' }, // -la are args, not subcommands in this context
+      defaultAbortSignal,
+    );
+    expect(result).toBe(false);
+  });
+
+  it('should return false if validateToolParams fails (e.g. empty command)', async () => {
+    const tool = shellToolWithRules();
+    const result = await tool.shouldConfirmExecute(
+      { command: ' ' },
+      defaultAbortSignal,
+    );
+    expect(result).toBe(false);
+  });
+});

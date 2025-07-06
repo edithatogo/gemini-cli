@@ -39,7 +39,7 @@ import { EditorSettingsDialog } from './components/EditorSettingsDialog.js';
 import { Colors } from './colors.js';
 import { Help } from './components/Help.js';
 import { loadHierarchicalGeminiMemory } from '../config/config.js';
-import { LoadedSettings } from '../config/settings.js';
+import { LoadedSettings, SettingScope, Settings as SettingsInterface } from '../config/settings.js';
 import { Tips } from './components/Tips.js';
 import { useConsolePatcher } from './components/ConsolePatcher.js';
 import { DetailedMessagesDisplay } from './components/DetailedMessagesDisplay.js';
@@ -136,6 +136,15 @@ const App = ({ config, settings, startupWarnings = [] }: AppProps) => {
   const openPrivacyNotice = useCallback(() => {
     setShowPrivacyNotice(true);
   }, []);
+
+  // Override config.updateSettings to use settings.setValue
+  config.updateSettings = (key: string, value: any): void => {
+    settings.setValue(
+      settings.workspace.path.includes('.gemini') ? SettingScope.Workspace : SettingScope.User,
+      key as keyof SettingsInterface,
+      value,
+    );
+  };
 
   const errorCount = useMemo(
     () => consoleMessages.filter((msg) => msg.type === 'error').length,
@@ -419,6 +428,14 @@ const App = ({ config, settings, startupWarnings = [] }: AppProps) => {
     getPreferredEditor,
     onAuthError,
     performMemoryRefresh,
+    // Pass the settings update callback to useGeminiStream which passes it to CoreToolScheduler
+    (key: string, value: Record<string, true | string[]> | undefined) => {
+      settings.setValue(settings.workspace.path.includes('.gemini') ? // Check if workspace settings file exists
+        SettingScope.Workspace : SettingScope.User,
+        key as keyof SettingsInterface,
+        value
+      );
+    },
   );
   pendingHistoryItems.push(...pendingGeminiHistoryItems);
   const { elapsedTime, currentLoadingPhrase } =

@@ -130,6 +130,7 @@ export interface ConfigParameters {
   bugCommand?: BugCommandSettings;
   model: string;
   extensionContextFilePaths?: string[];
+  alwaysAllowCommands?: Record<string, true | string[]>;
 }
 
 export class Config {
@@ -168,6 +169,7 @@ export class Config {
   private readonly bugCommand: BugCommandSettings | undefined;
   private readonly model: string;
   private readonly extensionContextFilePaths: string[];
+  private readonly alwaysAllowCommands: Record<string, true | string[]> | undefined;
   private modelSwitchedDuringSession: boolean = false;
   flashFallbackHandler?: FlashFallbackHandler;
 
@@ -211,6 +213,7 @@ export class Config {
     this.bugCommand = params.bugCommand;
     this.model = params.model;
     this.extensionContextFilePaths = params.extensionContextFilePaths ?? [];
+    this.alwaysAllowCommands = params.alwaysAllowCommands;
 
     if (params.contextFileName) {
       setGeminiMdFilename(params.contextFileName);
@@ -445,12 +448,25 @@ export class Config {
     return this.extensionContextFilePaths;
   }
 
+  getAlwaysAllowCommands(): Record<string, true | string[]> | undefined {
+    return this.alwaysAllowCommands;
+  }
+
   async getGitService(): Promise<GitService> {
     if (!this.gitService) {
       this.gitService = new GitService(this.targetDir);
       await this.gitService.initialize();
     }
     return this.gitService;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  updateSettings(key: string, value: any): void {
+    // This method will be overridden by the CLI to call LoadedSettings.setValue
+    // Core doesn't have direct access to LoadedSettings.
+    throw new Error(
+      `updateSettings not implemented in core. Key: ${key}, Value: ${JSON.stringify(value)}`,
+    );
   }
 }
 

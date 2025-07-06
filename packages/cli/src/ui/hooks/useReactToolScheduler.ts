@@ -70,6 +70,10 @@ export function useReactToolScheduler(
     React.SetStateAction<HistoryItemWithoutId | null>
   >,
   getPreferredEditor: () => EditorType | undefined,
+  updateSettingsCallback?: ( // Add this new parameter
+    key: string,
+    value: Record<string, true | string[]> | undefined,
+  ) => void,
 ): [TrackedToolCall[], ScheduleFn, MarkToolsAsSubmittedFn] {
   const [toolCallsForDisplay, setToolCallsForDisplay] = useState<
     TrackedToolCall[]
@@ -141,10 +145,14 @@ export function useReactToolScheduler(
         approvalMode: config.getApprovalMode(),
         getPreferredEditor,
         config,
+        updateSettingsCallback:
+          updateSettingsCallback ||
+          config.updateSettings.bind(config), // Bind context if using directly from config
       }),
     [
       config,
       outputUpdateHandler,
+      updateSettingsCallback,
       allToolCallsCompleteHandler,
       toolCallsUpdateHandler,
       getPreferredEditor,

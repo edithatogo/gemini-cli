@@ -133,17 +133,28 @@ export const ToolConfirmationMessage: React.FC<
       confirmationDetails as ToolExecuteConfirmationDetails;
 
     question = `Allow execution?`;
-    options.push(
-      {
-        label: 'Yes, allow once',
-        value: ToolConfirmationOutcome.ProceedOnce,
-      },
-      {
+    options.push({
+      label: 'Yes, allow once',
+      value: ToolConfirmationOutcome.ProceedOnce,
+    });
+
+    if (executionProps.subCommand) {
+      options.push({
+        label: `Yes, always allow "${executionProps.rootCommand} ${executionProps.subCommand} ..."`,
+        value: ToolConfirmationOutcome.ProceedAlways, // This will be handled by onConfirm to save subcommand
+      });
+      options.push({
+        label: `Yes, always allow "${executionProps.rootCommand}" (all subcommands)`,
+        value: ToolConfirmationOutcome.ProceedAlwaysRoot, // New outcome type for root command
+      });
+    } else {
+      options.push({
         label: `Yes, allow always "${executionProps.rootCommand} ..."`,
         value: ToolConfirmationOutcome.ProceedAlways,
-      },
-      { label: 'No (esc)', value: ToolConfirmationOutcome.Cancel },
-    );
+      });
+    }
+
+    options.push({ label: 'No (esc)', value: ToolConfirmationOutcome.Cancel });
 
     let bodyContentHeight = availableBodyContentHeight();
     if (bodyContentHeight !== undefined) {

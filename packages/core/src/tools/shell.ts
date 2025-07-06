@@ -236,17 +236,71 @@ Process Group PGID: Process group started or \`(none)\``,
     if (this.validateToolParams(params)) {
       return false; // skip confirmation, execute call will fail immediately
     }
-    const rootCommand = this.getCommandRoot(params.command)!; // must be non-empty string post-validation
-    if (this.whitelist.has(rootCommand)) {
-      return false; // already approved and whitelisted
+
+    const fullCommand = params.command.trim();
+    const commandParts = fullCommand.split(/\s+/);
+    const rootCommand = this.getCommandRoot(fullCommand)!; // must be non-empty string post-validation
+    const subCommand = commandParts.length > 1 ? commandParts[1] : undefined;
+
+    const alwaysAllowRules = this.config.getAlwaysAllowCommands();
+
+    if (alwaysAllowRules && alwaysAllowRules[rootCommand]) {
+      const rule = alwaysAllowRules[rootCommand];
+      if (rule === true) {
+        return false; // Always allow this command and all its subcommands
+      }
+      if (Array.isArray(rule) && subCommand && rule.includes(subCommand)) {
+        return false; // Always allow this specific subcommand
+      }
     }
+
+    // Fallback to legacy whitelist for backward compatibility if alwaysAllowRules doesn't cover it.
+    // This can be removed once alwaysAllowCommands is the sole source of truth.
+    if (this.whitelist.has(rootCommand)) {
+      return false; // already approved and whitelisted by legacy mechanism
+    }
+
     const confirmationDetails: ToolExecuteConfirmationDetails = {
       type: 'exec',
       title: 'Confirm Shell Command',
-      command: params.command,
+      command: fullCommand,
       rootCommand,
+      subCommand, // Pass subcommand to UI
       onConfirm: async (outcome: ToolConfirmationOutcome) => {
+        const alwaysAllowRules = { ...(this.config.getAlwaysAllowCommands() || {}) };
+        let updateSettings = false;
+
         if (outcome === ToolConfirmationOutcome.ProceedAlways) {
+          if (subCommand) {
+            const existingRule = alwaysAllowRules[rootCommand];
+            if (existingRule === true) {
+              // Already allows all subcommands, no change needed
+            } else if (Array.isArray(existingRule)) {
+              if (!existingRule.includes(subCommand)) {
+                existingRule.push(subCommand);
+                updateSettings = true;
+              }
+            } else {
+              alwaysAllowRules[rootCommand] = [subCommand];
+              updateSettings = true;
+            }
+          } else {
+            // No subcommand, so allow the root command entirely
+            if (alwaysAllowRules[rootCommand] !== true) {
+              alwaysAllowRules[rootCommand] = true;
+              updateSettings = true;
+            }
+          }
+        } else if (outcome === ToolConfirmationOutcome.ProceedAlwaysRoot) {
+          if (alwaysAllowRules[rootCommand] !== true) {
+            alwaysAllowRules[rootCommand] = true;
+            updateSettings = true;
+          }
+        }
+
+        if (updateSettings) {
+          this.config.updateSettings('alwaysAllowCommands', alwaysAllowRules);
+          // For now, also update the legacy whitelist for compatibility during transition
           this.whitelist.add(rootCommand);
         }
       },
